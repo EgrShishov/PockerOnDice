@@ -1,3 +1,5 @@
+using SignalRGame.Server.Hubs;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -15,6 +17,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.MapHub<GameHub>("/Game");
 
 app.MapControllers();
 

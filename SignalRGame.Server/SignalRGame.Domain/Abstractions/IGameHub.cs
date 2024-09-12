@@ -1,4 +1,4 @@
-﻿namespace SignalRGame.Server.Abstractions;
+﻿namespace SignalRGame.Domain.Abstractions;
 
 public interface IGameHub
 {

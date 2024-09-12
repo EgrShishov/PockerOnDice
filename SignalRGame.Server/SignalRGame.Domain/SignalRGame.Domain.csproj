@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Folder Include="Errors\" />
+    <Folder Include="Errors\" />
   </ItemGroup>
 
 </Project>
