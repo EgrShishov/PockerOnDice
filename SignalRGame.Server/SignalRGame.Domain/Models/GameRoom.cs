@@ -4,8 +4,8 @@ public class GameRoom
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; }
-
-    public List<Player> Players { get; set; }
+    public PockerOnDiceGame Game { get; set; } = new();
+    public List<Player> Players { get; set; } = new();
 
     public bool TryAddPlayer(Player player)
     {
