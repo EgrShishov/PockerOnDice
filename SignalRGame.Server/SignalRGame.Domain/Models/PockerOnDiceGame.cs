@@ -1,4 +1,7 @@
-﻿namespace SignalRGame.Domain.Models;
+﻿using System.ComponentModel.Design;
+using System.Runtime.CompilerServices;
+
+namespace SignalRGame.Domain.Models;
 
 public class PockerOnDiceGame
 {
@@ -11,7 +14,7 @@ public class PockerOnDiceGame
 
     public List<Dice> Dices = new(5); // за ход выбрасывается только 5
     public int RollsRemaining { get; set; } = 3; // количество бросков. По дефолту игрок имеет 3 броска во время хода
-    public int ChangeDicesRemaining { get; set; } = 2; // количество попыток 
+    public int ChangeDicesRemaining { get; set; } = 2; // количество попыток
 
     public void StartGame()
     {
@@ -93,7 +96,7 @@ public class PockerOnDiceGame
     }
 
     // подсчёт очков конкретного пользователя
-    public int CalculateScore(string playerId)
+    public Tuple<int, int> CalculateScore(string playerId)
     {
         int score = 0;
 
@@ -106,7 +109,31 @@ public class PockerOnDiceGame
         if (!Score.ContainsKey(playerId))
             throw new Exception("Player not found");
 
-        var counts = player.Dices.GroupBy(x => x)
+        // check chance, little street, big street
+        List<int> check = new List<int>(6);
+        bool combination = true;
+        for (int i = 0; i < 5; i++)
+        {
+            if (check[player.Dices[i].Value - 1] == 1)
+            {
+                combination = false;
+                break;
+            }
+            else
+                ++check[player.Dices[i].Value - 1];
+        }
+
+        if (combination)
+        {
+            if (check[0] == 0)                             // chance:
+                return Tuple.Create(6, 0);                 // 1, 2, 3, 4, 6 -> 1
+            if (check[5] == 0)                             // 1, 2, 3, 5, 6 -> 2
+                return Tuple.Create(5, 0);                 // 1, 2, 4, 5, 6 -> 3
+            return Tuple.Create(1, 5 - check.IndexOf(0));  // 1, 3, 4, 5, 6 -> 4
+        }
+        
+
+        var counts = player.Dices.GroupBy(x => x.Value)
                            .Select(group => new
                            {
                                Value = group.Key,
@@ -114,61 +141,59 @@ public class PockerOnDiceGame
                            })
                            .OrderByDescending(g => g.Count)
                            .ToList(); // группируем кубики у пользователя, допустим [1,1,3,3,3] -> 1 : 2, 3 : 3
-
+        // order
         if (counts[0].Count == 5)
         {
             // poker
-            score = 50;
+            return Tuple.Create(9, counts[0].Value);
         }
         else if (counts[0].Count == 4)
         {
             // kare
-            score = 40;
+            return Tuple.Create(8, 10 * counts[0].Value + counts[1].Value);
         }
         else if (counts[0].Count == 3 && counts[1].Count == 2)
         {
             // full house
-            score = 25;
+            return Tuple.Create(7, 10 * counts[0].Value + counts[1].Value);
         }
         else if (counts[0].Count == 3)
         {
             // set
-            score = player.Dices.Sum(x => x.Value);
+            return Tuple.Create(4, 100 * counts[0].Value + 10 * Math.Max(counts[1].Value, counts[2].Value) + Math.Min(counts[1].Value, counts[2].Value));
         }
         else if (counts[0].Count == 2 && counts[1].Count == 2)
         {
             // two pairs
-            score = 10;
+            return Tuple.Create(3, 100 * Math.Max(counts[0].Value, counts[1].Value) + 10 * Math.Min(counts[0].Value, counts[1].Value) + counts[2].Value);
         }
         else
         {
-            // other combinations
-            score = player.Dices.Sum(x => x.Value);
+            // one pairs
+            var values = new List<int> { counts[0].Value, counts[1].Value, counts[2].Value, counts[3].Value };
+            values = values.OrderByDescending(x => x).ToList();
+
+            return Tuple.Create(2, 1000 * values[0] + 100 * values[1] + 10 * values[2] + values[3]);
         }
-
-        player.Score += score;
-
-        return score;
     }
 
-    public Player DetermineRoundWinner()
+    public List<Player> DetermineRoundWinner()
     {
         var playerScores = Players.Select(p => new
         {
             Player = p,
             Score = CalculateScore(p.Id),
-            MaxDiceValueInCombo = p.Dices.GroupBy(d => d.Value)
-                                            .Where(g => g.Count() > 1)
-                                            .Max(g => g.Key), // подсчёт старшей кости?
-            RemainingDiceSum = p.Dices.Where(d => !d.IsSelected).Sum(d => d.Value) // оставшаяся сумма костей
         }).ToList();
 
-        var sortedPlayers = playerScores.OrderByDescending(p => p.Score)
-                                        .OrderByDescending(p => p.MaxDiceValueInCombo)
-                                        .OrderByDescending(p => p.RemainingDiceSum)
-                                        .ToList();
+        var sortedPlayers = playerScores.OrderByDescending(p => p.Score.Item1).ToList();
 
-        return sortedPlayers.First().Player;
+        var max_rang = sortedPlayers[0].Score.Item1;
+
+        sortedPlayers = sortedPlayers.Where(p => p.Score.Item1 == max_rang).GroupBy(x => x.Score.Item2).OrderByDescending(p => p.Key).First().ToList();
+
+        List<Player> win_players = sortedPlayers.Select(p => p.Player).ToList();
+
+        return win_players;
     }
 
     public void EndGame()
