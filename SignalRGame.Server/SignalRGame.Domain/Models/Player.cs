@@ -5,10 +5,10 @@ public class Player
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string ConnectionId { get; set; }
     public string Name { get; set; }
-    public List<Dice> Dices { get; set; } = new(6); // инвентарь каждого игрока 6 костей
+    public List<Dice> Dices { get; set; } = new(5); // инвентарь каждого игрока 5 костей
     public int Score { get; set; } // результат конкретного игрока
 
-    public async Task RollDice(List<int> diceValues) // бросаем кости
+    public void RollDice(List<int> diceValues) // бросаем кости
     {
         Random rnd = new Random();
 
@@ -24,7 +24,7 @@ public class Player
         }
     }
 
-    public async Task SelectDiceToKeep(List<int> diceIndices) // определяет какие кости сохраняем
+    public void SelectDiceToKeep(List<int> diceIndices) // определяет какие кости сохраняем
     {
         foreach (var dice in Dices)
         {
@@ -40,7 +40,7 @@ public class Player
         }
     }
 
-    public async Task SelectDiceToReroll(List<int> diceIndices) // определяет какие кости перебрасываем
+    public void SelectDiceToReroll(List<int> diceIndices) // определяет какие кости перебрасываем
     {
         foreach (var dice in Dices)
         {
