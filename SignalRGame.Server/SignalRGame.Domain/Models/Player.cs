@@ -8,13 +8,13 @@ public class Player
     public List<Dice> Dices { get; set; } = new(5); // инвентарь каждого игрока 5 костей
     public int Score { get; set; } // результат конкретного игрока
 
-    public void RollDice(List<int> diceValues) // бросаем кости
+    public void RollDice() // бросаем кости
     {
         Random rnd = new Random();
 
         for (int i = 0; i < Dices.Count; i++)
         {
-            if (!diceValues.Contains(i))
+            if (!Dices[i].IsKeeped)
             {
                 Dices[i] = new Dice
                 {
@@ -24,11 +24,11 @@ public class Player
         }
     }
 
-    public void SelectDiceToKeep(List<int> diceIndices) // определяет какие кости сохраняем
+    public void SelectDiceToKeep(List<int> diceIndices)
     {
         foreach (var dice in Dices)
         {
-            dice.IsSelected = false; // снимаем выделение со всех кубиков
+            dice.IsSelected = false;
         }
 
         foreach (var index in diceIndices)
@@ -40,7 +40,7 @@ public class Player
         }
     }
 
-    public void SelectDiceToReroll(List<int> diceIndices) // определяет какие кости перебрасываем
+/*    public void SelectDiceToReroll(List<int> diceIndices) // определяет какие кости перебрасываем
     {
         foreach (var dice in Dices)
         {
@@ -54,5 +54,5 @@ public class Player
                 Dices[index].IsSelected = true;
             }
         }
-    }
+    }*/
 }

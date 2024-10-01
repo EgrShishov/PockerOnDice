@@ -1,0 +1,125 @@
+﻿@page "/room/{RoomId}"
+@implements IDisposable
+
+<PageTitle>Room @RoomId</PageTitle>
+
+<div class="room-screen">
+	@if (CurrentRoom is not null)
+	{
+		@if(!CurrentRoom.Game.GameState.IsGameStarted || CurrentRoom.Game.GameState.IsGameOver
+			&& CurrentRoom.Game.Players.Count() > 2)
+		{
+			<button @onclick="async () => await StartGame()">Start game</button>
+		}
+		<div class="players-list">
+			<ul>
+				@if (CurrentRoom.Game.Players.Count() == 1)
+				{
+					<p>Wainting for players</p>
+				}
+				else
+				{
+					@foreach (var player in CurrentRoom.Game.Players ?? new List<Player>())
+					{
+						<li>@player.Name</li>
+					}
+				}
+			</ul>
+		</div>
+		<div class="room-buttons">
+			<button @onclick="async() => await LeaveRoom()">Leave</button>
+			<button @onclick="async () => await AddPlayer()">Add player</button>
+		</div>
+	}
+	<div class="game-board">
+		<div class="dice-container">
+			@if (CurrentRoom.Game.GameState.DiceValues.Any())
+			{
+				@foreach (var dice in CurrentRoom.Game.GameState.DiceValues)
+				{
+					<Dice Value="@dice" @onclick="async () => await FreezeDice(dice)" />
+				}
+			}
+		</div>
+		@if (CurrentRoom.Game.GameState.IsGameStarted)
+		{
+			<button @onclick="async () => await OnRollDice()">
+				Roll dice
+			</button>
+		}
+	</div>
+</div>
+
+@code {
+	[Inject]
+	public NavigationManager NavigationManager { get; set; }
+	[Inject]
+	public GameClient GameClient { get; set; }
+
+	[Parameter]
+	public string RoomId { get; set; }
+	[Parameter]
+	public GameRoom? CurrentRoom { get; set; }
+
+	private string? currentPlayerId { get; set; }
+	private List<int> IndiciesToKeep { get; set; } = new List<int>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		GameClient.OnRoomsUpdated += StateHasChanged;
+		GameClient.OnGameStateUpdated += StateHasChanged;
+
+		CurrentRoom = GameClient.Rooms[RoomId];
+		currentPlayerId = GameClient.GetCurrentPlayerId();
+	}
+
+	public void Dispose()
+	{
+		GameClient.OnRoomsUpdated -= StateHasChanged;
+		GameClient.OnGameStateUpdated -= StateHasChanged;
+	}
+
+	private async Task StartGame()
+	{
+		if (CurrentRoom is not null)
+			await GameClient.StartGame(CurrentRoom.Id);	
+	}
+
+	private async Task OnRollDice()
+	{
+		if (CurrentRoom is not null)
+		{
+			await GameClient.RollDice(CurrentRoom.Game.CurrentPlayerId);
+		}
+	}
+
+	private async Task FreezeDice(int diceIndex)
+	{
+		if (CurrentRoom is not null)
+		{
+			if (!IndiciesToKeep.Contains(diceIndex))
+				IndiciesToKeep.Add(diceIndex);
+
+			await GameClient.FreezeDice(CurrentRoom.Game.GameState.CurrentPlayerId, IndiciesToKeep);
+		}
+	}
+
+	private string GetDiceImage(int diceValue)
+	{
+		return "";
+	}
+
+	private async Task LeaveRoom()
+	{
+		if (GameClient is not null)
+		{
+			await GameClient.LeaveRoom(RoomId, GameClient.GetCurrentPlayerId());
+			NavigationManager.NavigateTo("/");
+		}
+	}
+
+	private async Task AddPlayer()
+	{
+		throw new NotImplementedException();
+	}
+}

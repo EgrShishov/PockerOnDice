@@ -1,0 +1,10 @@
+﻿<div class="dice" style="@GetDiceStyle()"></div>
+
+@code {
+    [Parameter]
+    public int Value { get; set; }
+
+    private string GetDiceStyle() => 
+        $"background-position: {(Value - 1) * -100}px 0; width: 100px; height: 100px;";
+}
+

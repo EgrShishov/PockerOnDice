@@ -1,0 +1,85 @@
+﻿@page "/"
+@implements IDisposable
+
+<PageTitle>Game Lobby</PageTitle>
+
+<div class="full-screen">
+    <div class="left-sidebar">
+        <h3 style="font-family:Garamond; color:white;">Available Rooms</h3>
+        @if (GameClient.Rooms?.Any() == true)
+        {
+            @foreach (var room in GameClient.Rooms.Values)
+            {
+                <div class="room-item" @onclick="() => JoinRoom(room.Id)">
+                    <strong>@room.Name</strong> - Players: @room.Game.Players.Count()/6
+                </div>
+            }
+        }
+        else
+        {
+            <p style="font-family:Garamond; color:white; font-weight:bold;">No available rooms</p>
+        }
+    </div>
+
+	<div class="center-content">
+		<EditForm Model="@createRoomModel" OnValidSubmit="@CreateRoom">
+			<DataAnnotationsValidator />
+			<ValidationSummary />
+
+			<InputText @bind-Value="createRoomModel.PlayerName" placeholder="Enter your name" />
+			<ValidationMessage For="@(() => createRoomModel.PlayerName)" />
+
+			<InputText @bind-Value="createRoomModel.RoomName" placeholder="Enter room name" />
+			<ValidationMessage For="@(() => createRoomModel.RoomName)" />
+
+			<button type="submit">Create Room</button>
+		</EditForm>
+	</div>
+</div>
+
+
+@code {
+	[Inject]
+	public GameClient GameClient { get; set; }
+
+	[Inject]
+	public NavigationManager NavigationManager { get; set; }
+
+	private CreateRoomModel createRoomModel = new CreateRoomModel();
+	private string roomName = string.Empty;
+	private string playerName = string.Empty;
+	private string errorMessage = string.Empty;
+
+	protected override async Task OnInitializedAsync()
+	{
+		GameClient.OnRoomsUpdated += StateHasChanged;
+		GameClient.OnGameStateUpdated += StateHasChanged;
+	}
+
+	public void Dispose()
+	{
+		GameClient.OnRoomsUpdated -= StateHasChanged;
+		GameClient.OnGameStateUpdated -= StateHasChanged;
+	}
+
+	private async Task CreateRoom()
+	{
+
+		if (!string.IsNullOrEmpty(createRoomModel.PlayerName) && !string.IsNullOrEmpty(createRoomModel.RoomName))
+		{
+			var addedRoom = await GameClient.CreateRoom(createRoomModel.RoomName, createRoomModel.PlayerName);
+			StateHasChanged();
+			NavigationManager.NavigateTo($"/room/{addedRoom.Id}");
+		}
+	}
+
+	private async Task JoinRoom(string roomId)
+	{
+		if (GameClient is not null)
+		{
+			var joinedRoom = await GameClient.JoinRoom(roomId, createRoomModel.PlayerName);
+			StateHasChanged();
+			NavigationManager.NavigateTo($"/room/{roomId}");
+		}
+	}
+}

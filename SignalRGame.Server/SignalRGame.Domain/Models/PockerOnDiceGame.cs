@@ -1,20 +1,16 @@
-﻿using System.ComponentModel.Design;
-using System.Runtime.CompilerServices;
-
-namespace SignalRGame.Domain.Models;
+﻿namespace SignalRGame.Domain.Models;
 
 public class PockerOnDiceGame
 {
     public string Id { get; set; } = Guid.NewGuid().ToString(); // уникальный айди игры
-    public Dictionary<string, List<int>> Score { get; set; } // результаты каждого игрока по костям
-    public List<Player> Players { get; set; } // список всех игроков
+    public Dictionary<string, List<int>> Score { get; set; } = new(); // результаты каждого игрока по костям
+    public List<Player> Players { get; set; } = new();// список всех игроков
     public int CurrentRound { get; set; } = 0;
-    public GameState GameState { get; set; }
-    public string CurrentPlayerId { get; set; }
+    public GameState GameState { get; set; } = new();
+    public string CurrentPlayerId { get; set; } = string.Empty;
 
     public List<Dice> Dices = new(5); // за ход выбрасывается только 5
     public int RollsRemaining { get; set; } = 3; // количество бросков. По дефолту игрок имеет 3 броска во время хода
-    public int ChangeDicesRemaining { get; set; } = 2; // количество попыток
 
     public void StartGame()
     {
@@ -89,7 +85,8 @@ public class PockerOnDiceGame
         if (currentPlayer is null)
             return false;
 
-        currentPlayer.RollDice(dicesSelection);
+        currentPlayer.SelectDiceToKeep(dicesSelection);
+        currentPlayer.RollDice();
         // where should i handle keep and select dices logic?
 
         return true;
