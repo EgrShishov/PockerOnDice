@@ -9,11 +9,12 @@ namespace SignalRGame.Domain.Abstractions
 		Task LeaveRoom(string roomId, string playerName);
 		Task UpdateRoomsList(List<GameRoom> rooms);
 		Task UpdateGameState(string roomId, GameState gameState);
-		Task RollDice(string playerId);
-		Task FreezeDice(string playerId, List<int> indecesToKeep);
-		Task NotifyNextTurn(string playerId);
 		Task StartGame(string roomId);
-		Task EndGame(string roomId, string winnedId, string score);
-		Task EndTurn(string roomId);
+		Task RollDice(string roomId, string playerId, List<int> dicesToReroll);
+		//Task RollDice(string playerId, List<int> dicesToReroll);
+		//Task FreezeDice(string playerId, List<int> indecesToKeep);
+		//Task NotifyNextTurn(string playerId);
+		//Task EndGame(string roomId, string winnedId, string score);
+		//Task EndTurn(string roomId);
 	}
 }

@@ -3,15 +3,14 @@
 namespace SignalRGame.Domain.Abstractions;
 public interface IGameClient
 {
-	Task RecieveGameState(string roomId, GameState gameState);
 	Task RecieveRoomsList(List<GameRoom> rooms);
 	Task PlayerJoined(string roomId, Player player);
 	Task PlayerLeft(string roomId, Player player);
-	Task DiceRolled(string playerId, List<int> diceValues);
-	Task DiceFreezed(string playerId, List<int> indeciesToKeep);
-	Task TurnEnded(string playerId, List<int> diceToReroll);
 	Task GameStarted(string roomId, GameState gameState);
-	Task GameEnded(string roomId, GameResult result);
+	Task DiceRolled(string playerId, List<Player> winners, List<int> dicesToReroll, List<int> diceValues);
+	Task RecieveWinners(string roomId, GameState gameState);
+	Task GameEnded(string roomId, Player winner);
 	Task ReceiveError(string errorMessage);
-	Task NotifyNextTurn(string playerId);
+	
+	Task RecieveGameState(string roomId, GameState gameState);
 }
