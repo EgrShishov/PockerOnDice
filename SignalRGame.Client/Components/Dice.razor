@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-﻿<div class="dice" style="@GetDiceStyle()"></div>
-<div>
-    <InputCheckbox>Value</InputCheckbox>
-</div>
-=======
-﻿<div class="dice @GetAnimationClass() @GetFrozenClass()" style="@GetDiceStyle()" @onclick="@ToggleFreeze"></div>
 
->>>>>>> c28d09060da6a67f8667654cbb1edeb440ac7841
+<div class="dice @GetAnimationClass() @GetFrozenClass()" style="@GetDiceStyle()" @onclick="@ToggleFreeze"></div>
+
 @code {
     [Parameter]
     public DiceClass DiceValue { get; set; }

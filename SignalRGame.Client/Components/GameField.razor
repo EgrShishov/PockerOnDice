@@ -46,7 +46,7 @@
         var rand = new Random();
         foreach (var dice in diceList)
         {
-            if (!dice.IsSelected)
+            if (dice.IsReroll)
             {
                 dice.Value = rand.Next(1, 7);
             }
@@ -56,7 +56,7 @@
     private void ToggleDiceSelection(DiceClass value)
     {
         var index = value.Id;
-        diceList[index].IsSelected = !diceList[index].IsSelected;
+        diceList[index].IsReroll = !diceList[index].IsReroll;
     }
 
     private void EndTurn()

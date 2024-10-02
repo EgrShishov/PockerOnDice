@@ -3,12 +3,7 @@
 
 <PageTitle>Game Lobby</PageTitle>
 
-<div class="game-room">
-	<PlayersList Players="@Players" />
-	<GameField />
-	<Betting CurrentBet="@CurrentBet" TotalPot="@TotalPot" />
-</div>
-@* <div class="full-screen">
+<div class="full-screen">
 
     <div class="left-sidebar">
         <h3 style="font-family:Garamond; color:white;">Available Rooms</h3>
@@ -41,7 +36,7 @@
 			<button type="submit">Create Room</button>
 		</EditForm>
 	</div>
-</div> *@
+</div>
 
 @code {
 	[Inject]
