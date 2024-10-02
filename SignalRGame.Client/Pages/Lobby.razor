@@ -17,7 +17,7 @@
             @foreach (var room in GameClient.Rooms.Values)
             {
                 <div class="room-item" @onclick="() => JoinRoom(room.Id)">
-                    <strong>@room.Name</strong> - Players: @room.Game.Players.Count()/6
+                    <strong>@room.Name</strong> - Players: @room.Game.GameState.Players.Count()/6
                 </div>
             }
         }
@@ -80,8 +80,10 @@
 	{
 		if (!string.IsNullOrEmpty(createRoomModel.PlayerName) && !string.IsNullOrEmpty(createRoomModel.RoomName))
 		{
+			Console.WriteLine("Lobby_CreateRoom");
 			var addedRoom = await GameClient.CreateRoom(createRoomModel.RoomName, createRoomModel.PlayerName);
 			StateHasChanged();
+			Console.WriteLine("Lobby_CreateRoom_success");
 			NavigationManager.NavigateTo($"/room/{addedRoom.Id}");
 		}
 	}

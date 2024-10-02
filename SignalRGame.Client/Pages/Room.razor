@@ -3,11 +3,80 @@
 
 <PageTitle>Room @RoomId</PageTitle>
 
+<<<<<<< HEAD
 <div class="game-room">
 	<PlayersList Players="@CurrentRoom.Game.Players" />
 	<GameField />
 	<Betting CurrentBet="@CurrentBet" TotalPot="@TotalPot" />
 </div>
+=======
+<GameField />
+<PlayersList Players="@CurrentRoom.Game.Players"/>
+@* 
+<div class="room-screen">
+	<div><button>@currentPlayerId</button></div>
+	<!---->
+	@if (CurrentRoom is not null)
+	{
+		@if(!CurrentRoom.Game.GameState.IsGameStarted)//|| CurrentRoom.Game.GameState.IsGameOver && CurrentRoom.Game.GameState.Players.Count() > 2)
+		{
+			<button @onclick="async () => await StartGame()">Start game</button>
+			<div class="players-list">
+				<button><ul>
+					@if (CurrentRoom.Game.GameState.Players.Count() == 1)
+					{
+						<p>Wainting for players</p>
+					}
+					else
+					{
+						@foreach (var player in CurrentRoom.Game.GameState.Players ?? new List<Player>())
+						{
+							<li>@player.Name</li>
+						}
+					}
+				</ul></button>
+			</div>
+			<div class="room-buttons">
+				<button @onclick="async() => await LeaveRoom()">Leave</button>
+				<!--<button @onclick="async () => await AddPlayer()">Add player</button>-->
+			</div>
+		}
+		else
+		{
+			<div class="game-board">
+				<div class="dice-container">
+					@if (CurrentRoom.Game.GameState.Players.FirstOrDefault(x => x.Id == CurrentRoom.Game.GameState.CurrentPlayerId).Dices.Any())
+					{
+						int index = -1;
+						@foreach (var dice in CurrentRoom.Game.GameState.Players.FirstOrDefault(x => x.Id == CurrentRoom.Game.GameState.CurrentPlayerId).Dices)
+						{
+							++index;
+							<Dice Value="@dice.Value" @onclick="async () => await RerollDice(index)" />
+						}
+					}
+				</div>
+				@if (CurrentRoom.Game.GameState.CurrentPlayerId == currentPlayerId)
+				{
+					<button @onclick="async () => await OnRollDice()">
+						Roll dice
+					</button>
+				}
+				else
+				{
+					<button>
+						Not your turn
+					</button>
+				}
+			</div>
+		}
+<<<<<<< HEAD
+	}
+</div>
+=======
+	</div>
+</div> *@
+>>>>>>> c28d09060da6a67f8667654cbb1edeb440ac7841
+>>>>>>> 5481e809a50bc31f1ef471dd959f0c1f0101af18
 
 @code {
 	[Inject]
@@ -24,15 +93,19 @@
 	public GameRoom? CurrentRoom { get; set; }
 
 	private string? currentPlayerId { get; set; }
-	private List<int> IndiciesToKeep { get; set; } = new List<int>();
+	private List<int> IndiciesToReroll { get; set; } = new List<int>();
 
 	protected override async Task OnInitializedAsync()
 	{
+		Console.WriteLine("Room_Initialized");
 		GameClient.OnRoomsUpdated += StateHasChanged;
+		GameClient.OnGameStateUpdated += UpdateGameState;
 		GameClient.OnGameStateUpdated += StateHasChanged;
 
 		CurrentRoom = GameClient.Rooms[RoomId];
 		currentPlayerId = GameClient.GetCurrentPlayerId();
+		Console.WriteLine($"Room_Initialized: {CurrentRoom.Name} - id: {CurrentRoom.Id}");
+		Console.WriteLine($"Room_Initialized: player_id: {currentPlayerId}");
 	}
 
 	public void Dispose()
@@ -44,26 +117,40 @@
 	private async Task StartGame()
 	{
 		if (CurrentRoom is not null)
-			await GameClient.StartGame(CurrentRoom.Id);	
+		{
+			Console.WriteLine("Room_StartGame");
+			await GameClient.StartGame(CurrentRoom.Id);
+			Console.WriteLine("Room_StartGame_success");
+		}
 	}
 
 	private async Task OnRollDice()
 	{
 		if (CurrentRoom is not null)
 		{
-			await GameClient.RollDice(CurrentRoom.Game.CurrentPlayerId);
+			Console.WriteLine("Room_OnRollDice");
+			await GameClient.RollDice(CurrentRoom.Id, CurrentRoom.Game.GameState.CurrentPlayerId, IndiciesToReroll);
+			Console.WriteLine("Room_OnRollDice_success");
 		}
 	}
 
-	private async Task FreezeDice(int diceIndex)
+	private async Task RerollDice(int diceIndex)
 	{
-		if (CurrentRoom is not null)
+		if (IndiciesToReroll.Contains(diceIndex))
 		{
+			IndiciesToReroll.Remove(diceIndex);
+		}
+		else
+		{
+			IndiciesToReroll.Add(diceIndex);
+		}
+		/*if (CurrentRoom is not null)
+			{
 			if (!IndiciesToKeep.Contains(diceIndex))
 				IndiciesToKeep.Add(diceIndex);
 
 			await GameClient.FreezeDice(CurrentRoom.Game.GameState.CurrentPlayerId, IndiciesToKeep);
-		}
+		}*/
 	}
 
 	private string GetDiceImage(int diceValue)
@@ -78,6 +165,11 @@
 			await GameClient.LeaveRoom(RoomId, GameClient.GetCurrentPlayerId());
 			NavigationManager.NavigateTo("/");
 		}
+	}
+
+	private void UpdateGameState()
+	{
+		CurrentRoom = GameClient.Rooms[RoomId];
 	}
 
 	private async Task AddPlayer()

@@ -4,5 +4,5 @@ public class DiceClass
 {
     public int Id { get; set; }
     public int Value { get; set; }
-    public bool IsSelected { get; set; } = false; // если true, то выбран для следующего переброса
+    public bool IsReroll { get; set; } = true; // если true, то выбран для следующего переброса
 }
