@@ -6,11 +6,16 @@ public class Player
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string ConnectionId { get; set; }
     public string Name { get; set; }
+<<<<<<< HEAD
     public List<Dice> Dices { get; set; } = new() {new Dice(), new Dice(), new Dice(), new Dice(), new Dice()}; // инвентарь каждого игрока 5 костей
     // Combination(ранг комбинации, score комбинации этого ранга)
     // результат конкретного игрока в текущем раунде. Сбрасывается каждую новую игру.
 	public Combination Combo { get; set; } = new();
     public int Balance { get; set; }
+=======
+    public List<DiceClass> Dices { get; set; } = new(5); // инвентарь каждого игрока 5 костей
+    public int Score { get; set; } // результат конкретного игрока
+>>>>>>> c28d09060da6a67f8667654cbb1edeb440ac7841
 
     public void RollDice() // бросаем кости
     {
@@ -20,8 +25,15 @@ public class Player
         {
             if (Dices[i].IsReroll)
             {
+<<<<<<< HEAD
                 Dices[i].Value = rnd.Next(1, 7);
                 Dices[i].IsReroll = false;
+=======
+                Dices[i] = new DiceClass
+                {
+                    Value = rnd.Next(1, 7)
+                };
+>>>>>>> c28d09060da6a67f8667654cbb1edeb440ac7841
             }
         }
     }

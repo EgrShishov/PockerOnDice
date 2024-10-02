@@ -3,6 +3,9 @@
 
 <PageTitle>Room @RoomId</PageTitle>
 
+<GameField />
+<PlayersList Players="@CurrentRoom.Game.Players"/>
+@* 
 <div class="room-screen">
 	<div><button>@currentPlayerId</button></div>
 	<!---->
@@ -59,8 +62,13 @@
 				}
 			</div>
 		}
+<<<<<<< HEAD
 	}
 </div>
+=======
+	</div>
+</div> *@
+>>>>>>> c28d09060da6a67f8667654cbb1edeb440ac7841
 
 @code {
 	[Inject]

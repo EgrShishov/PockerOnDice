@@ -3,7 +3,10 @@
 
 <PageTitle>Game Lobby</PageTitle>
 
-<div class="full-screen">
+<GameField />
+<PlayersList Players="@Players" />
+@* <div class="full-screen">
+
     <div class="left-sidebar">
         <h3 style="font-family:Garamond; color:white;">Available Rooms</h3>
         @if (GameClient.Rooms?.Any() == true)
@@ -35,12 +38,17 @@
 			<button type="submit">Create Room</button>
 		</EditForm>
 	</div>
-</div>
-
+</div> *@
 
 @code {
 	[Inject]
 	public GameClient GameClient { get; set; }
+
+	private List<Player> Players { get; set; } = new()
+	{
+		new Player {Name = "mama"},
+		new Player {Name = "papa"}
+	};
 
 	[Inject]
 	public NavigationManager NavigationManager { get; set; }
@@ -64,7 +72,6 @@
 
 	private async Task CreateRoom()
 	{
-
 		if (!string.IsNullOrEmpty(createRoomModel.PlayerName) && !string.IsNullOrEmpty(createRoomModel.RoomName))
 		{
 			Console.WriteLine("Lobby_CreateRoom");

@@ -1,0 +1,29 @@
+﻿<div class="player-list">
+    @if (Players.Count() == 0)
+    {
+        <div class="no-players">
+            <div class="scroll-message">
+                Waiting for other players...
+            </div>
+        </div>
+    }
+    else
+    {
+        @foreach (var player in Players)
+        {
+            <div class="player-item">
+                <div class="player-name">@player.Name</div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<Player> Players { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        return Task.CompletedTask;
+    }
+}
