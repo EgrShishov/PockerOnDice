@@ -3,6 +3,9 @@
 
 <PageTitle>Room @RoomId</PageTitle>
 
+<GameField />
+<PlayersList Players="@CurrentRoom.Game.Players"/>
+@* 
 <div class="room-screen">
 	@if (CurrentRoom is not null)
 	{
@@ -48,7 +51,7 @@
 			</button>
 		}
 	</div>
-</div>
+</div> *@
 
 @code {
 	[Inject]

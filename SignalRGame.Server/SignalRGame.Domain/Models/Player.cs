@@ -5,7 +5,7 @@ public class Player
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string ConnectionId { get; set; }
     public string Name { get; set; }
-    public List<Dice> Dices { get; set; } = new(5); // инвентарь каждого игрока 5 костей
+    public List<DiceClass> Dices { get; set; } = new(5); // инвентарь каждого игрока 5 костей
     public int Score { get; set; } // результат конкретного игрока
 
     public void RollDice() // бросаем кости
@@ -16,7 +16,7 @@ public class Player
         {
             if (!Dices[i].IsKeeped)
             {
-                Dices[i] = new Dice
+                Dices[i] = new DiceClass
                 {
                     Value = rnd.Next(1, 7)
                 };

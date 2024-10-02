@@ -8,8 +8,7 @@ public class PockerOnDiceGame
     public int CurrentRound { get; set; } = 0;
     public GameState GameState { get; set; } = new();
     public string CurrentPlayerId { get; set; } = string.Empty;
-
-    public List<Dice> Dices = new(5); // за ход выбрасывается только 5
+    public List<DiceClass> Dices = new(5); // за ход выбрасывается только 5
     public int RollsRemaining { get; set; } = 3; // количество бросков. По дефолту игрок имеет 3 броска во время хода
 
     public void StartGame()
@@ -60,7 +59,7 @@ public class PockerOnDiceGame
             {
                 if (diceSelection is null || !diceSelection.Contains(i))
                 {
-                    Dices[i] = new Dice
+                    Dices[i] = new DiceClass
                     {
                         Value = rnd.Next(1, 7)
                     };

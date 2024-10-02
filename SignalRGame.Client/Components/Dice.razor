@@ -1,10 +1,29 @@
-﻿<div class="dice" style="@GetDiceStyle()"></div>
+﻿<div class="dice @GetAnimationClass() @GetFrozenClass()" style="@GetDiceStyle()" @onclick="@ToggleFreeze"></div>
 
 @code {
     [Parameter]
-    public int Value { get; set; }
+    public DiceClass DiceValue { get; set; }
 
-    private string GetDiceStyle() => 
-        $"background-position: {(Value - 1) * -100}px 0; width: 100px; height: 100px;";
+    [Parameter]
+    public bool IsFrozen { get; set; } = false;
+
+    [Parameter]
+    public Action<DiceClass> OnToggleFreeze { get; set; }
+
+    private bool isRolling = false; // animation flag
+    private bool isBlack = false;
+
+    private string GetDiceStyle() =>
+        $"background-image: url('/sources/dice{DiceValue.Value}.png');";
+
+    private string GetAnimationClass() => isRolling ? "rolling" : "";
+
+    private string GetFrozenClass() => IsFrozen ? "frozen" : "";
+
+    private void ToggleFreeze()
+    {
+        IsFrozen = IsFrozen ? false : true;
+        OnToggleFreeze.Invoke(DiceValue);
+    }
 }
 
