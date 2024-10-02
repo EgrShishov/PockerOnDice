@@ -4,7 +4,7 @@
                 <div class="dice-area">
                     @for (int i = 0; i < diceList.Count(); i++)
                     {
-                        <div class="dice-slot">
+                        <div class="dice-slot @(diceList[i].IsReroll ? "" : "frozen")">
                             <Dice DiceValue="@diceList[i]"
                                   IsRolling="@diceList[i].IsRolling"
                                   OnToggleFreeze="ToggleDiceSelection" />
@@ -16,7 +16,7 @@
                 <div class="opponents-dice-area">
                     @for (int i = 0; i < diceList.Count(); i++)
                     {
-                        <div class="dice-slot">
+                        <div class="dice-slot @(diceList[i].IsReroll ? "" : "frozen")">
                             <Dice DiceValue="@diceList[i]"
                                   IsRolling="@diceList[i].IsRolling"
                                   OnToggleFreeze="ToggleDiceSelection" />
