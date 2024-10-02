@@ -7,14 +7,15 @@ public class Player
     public string Name { get; set; }
     public List<DiceClass> Dices { get; set; } = new(5); // инвентарь каждого игрока 5 костей
     public int Score { get; set; } // результат конкретного игрока
+	public decimal CurrentBet { get; set; } = 0;
 
-    public void RollDice() // бросаем кости
+	public void RollDice() // бросаем кости
     {
         Random rnd = new Random();
 
         for (int i = 0; i < Dices.Count; i++)
         {
-            if (!Dices[i].IsKeeped)
+            if (!Dices[i].IsSelected)
             {
                 Dices[i] = new DiceClass
                 {
@@ -35,7 +36,7 @@ public class Player
         {
             if (index >= 0 && index < diceIndices.Count)
             {
-                Dices[index].IsKeeped = true;
+                //Dices[index].IsKeeped = true;
             }
         }
     }

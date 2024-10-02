@@ -2,19 +2,20 @@
     @if (Players.Count() == 0)
     {
         <div class="no-players">
-            <div class="scroll-message">
-                Waiting for other players...
-            </div>
+            Waiting for other players...
         </div>
     }
     else
     {
-        @foreach (var player in Players)
-        {
-            <div class="player-item">
-                <div class="player-name">@player.Name</div>
-            </div>
-        }
+        <p class="player-item">Players: </p>
+        <div class="players">
+            @foreach (var player in Players)
+            {
+                <div class="player-item">
+                    <div class="player-name">@player.Name</div>
+                </div>
+            }
+        </div>
     }
 </div>
 

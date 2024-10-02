@@ -1,0 +1,33 @@
+﻿<div class="betting-panel">  
+    <div class="bet-info">
+        <p>Current Bet: @CurrentBet</p>
+        <p>Total Pot: @TotalPot</p>
+    </div>
+    <div class="bet-actions">
+        <button @onclick="Check">Check</button>
+        <button @onclick="Pass">Pass</button>
+        <button @onclick="Raise">Raise</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public decimal CurrentBet { get; set; }
+    [Parameter]
+    public decimal TotalPot { get; set; }
+
+    private void Check()
+    {
+
+    }
+
+    private void Pass()
+    {
+
+    }
+
+    private void Raise()
+    {
+        
+    }
+}

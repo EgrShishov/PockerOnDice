@@ -1,24 +1,26 @@
 ﻿<div class="game-table">
     <div class="decorative-frame">
-        <div class="center-artwork">
-        </div>
-        <div class="dice-area">
-            @for (int i = 0; i < diceList.Count(); i++)
-            {
-                <div class="dice-slot">
-                    <Dice DiceValue="@diceList[i]"
-                          OnToggleFreeze="value => ToggleDiceSelection(value)" />
-                </div>
-            }
-        </div>
-        <div class="opponents-dice-area">
-            @for (int i = 0; i < diceList.Count(); i++)
-            {
-                <div class="dice-slot">
-                    <Dice DiceValue="@diceList[i]"
-                          OnToggleFreeze="value => ToggleDiceSelection(value)" />
-                </div>
-            }
+        <div class="game-container">
+            <div class="dice-area">
+                @for (int i = 0; i < diceList.Count(); i++)
+                {
+                    <div class="dice-slot">
+                        <Dice DiceValue="@diceList[i]"
+                              OnToggleFreeze="value => ToggleDiceSelection(value)" />
+                    </div>
+                }
+            </div>
+            <div class="center-artwork">
+            </div>
+            <div class="opponents-dice-area">
+                @for (int i = 0; i < diceList.Count(); i++)
+                {
+                    <div class="dice-slot">
+                        <Dice DiceValue="@diceList[i]"
+                              OnToggleFreeze="value => ToggleDiceSelection(value)" />
+                    </div>
+                }
+            </div>
         </div>
         <div class="bottom-panel">
             <button class="roll-button" @onclick="RollDice">Roll Dice</button>

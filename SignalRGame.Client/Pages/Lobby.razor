@@ -3,8 +3,11 @@
 
 <PageTitle>Game Lobby</PageTitle>
 
-<GameField />
-<PlayersList Players="@Players" />
+<div class="game-room">
+	<PlayersList Players="@Players" />
+	<GameField />
+	<Betting CurrentBet="@CurrentBet" TotalPot="@TotalPot" />
+</div>
 @* <div class="full-screen">
 
     <div class="left-sidebar">
@@ -43,6 +46,9 @@
 @code {
 	[Inject]
 	public GameClient GameClient { get; set; }
+
+	public decimal CurrentBet = 100;
+	public decimal TotalPot = 150;
 
 	private List<Player> Players { get; set; } = new()
 	{

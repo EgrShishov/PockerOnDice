@@ -1,4 +1,6 @@
-﻿namespace SignalRGame.Domain.Models;
+﻿using System.Runtime.CompilerServices;
+
+namespace SignalRGame.Domain.Models;
 
 public class GameState
 {
@@ -9,4 +11,21 @@ public class GameState
     public List<int> DiceValues { get; set; } = new();
     public bool IsGameStarted { get; set; } = false;
     public bool IsGameOver { get; set; } = false;
+	public decimal TotalPot { get; set; } = 0;
+
+	public void RaiseBet(string playerId, decimal amount)
+	{
+		Players.Find(p => p.Id.Equals(playerId)).CurrentBet += amount;
+		TotalPot += amount;
+	}
+
+	public void Check(string playerId)
+	{
+
+	}
+	
+	public void Pass(string playerId)
+	{
+
+	}
 }
