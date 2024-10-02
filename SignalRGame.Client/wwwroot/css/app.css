@@ -120,40 +120,46 @@ code {
     display: inline-block;
 }
 
-    .rolling {
-        animation: roll 1s ease-out;
+.dice.rolling {
+    animation: roll 1s ease-out;
+}
+
+@keyframes roll {
+    0% {
+        transform: rotate(0deg);
+        background-image: url('/sources/dice1.png');
     }
 
-    .dice-img {
-        width: 100%;
-        height: 100%;
+    16.67% {
+        transform: rotate(60deg);
+        background-image: url('/sources/dice2.png');
     }
 
-    @keyframes roll {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        25% {
-            transform: rotate(90deg);
-        }
-
-        50% {
-            transform: rotate(180deg);
-        }
-
-        75% {
-            transform: rotate(270deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
+    33.33% {
+        transform: rotate(120deg);
+        background-image: url('/sources/dice3.png');
     }
 
-        .dice.rolling {
-            animation: rollAnimation 1s;
-        }
+    50% {
+        transform: rotate(180deg);
+        background-image: url('/sources/dice4.png');
+    }
+
+    66.67% {
+        transform: rotate(240deg);
+        background-image: url('/sources/dice5.png');
+    }
+
+    83.33% {
+        transform: rotate(300deg);
+        background-image: url('/sources/dice6.png');
+    }
+
+    100% {
+        transform: rotate(360deg);
+        background-image: url('/sources/dice1.png'); /* Reset to the first die */
+    }
+}
 
 body, html {
     margin: 0;

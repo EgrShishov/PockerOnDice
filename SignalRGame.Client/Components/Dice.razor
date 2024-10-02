@@ -4,26 +4,20 @@
 @code {
     [Parameter]
     public DiceClass DiceValue { get; set; }
-
-    [Parameter]
-    public bool IsFrozen { get; set; } = false;
-
     [Parameter]
     public Action<DiceClass> OnToggleFreeze { get; set; }
-
-    private bool isRolling = false; // animation flag
-    private bool isBlack = false;
+    [Parameter]
+    public bool IsRolling { get; set; } = false;
 
     private string GetDiceStyle() =>
         $"background-image: url('/sources/dice{DiceValue.Value}.png');";
 
-    private string GetAnimationClass() => isRolling ? "rolling" : "";
+    private string GetAnimationClass() => IsRolling ? "rolling" : "";
 
-    private string GetFrozenClass() => IsFrozen ? "frozen" : "";
+    private string GetFrozenClass() => !DiceValue.IsReroll ? "frozen" : "";
 
     private void ToggleFreeze()
     {
-        IsFrozen = IsFrozen ? false : true;
         OnToggleFreeze.Invoke(DiceValue);
     }
 }

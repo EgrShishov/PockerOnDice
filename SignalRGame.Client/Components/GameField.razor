@@ -1,66 +1,87 @@
-﻿<div class="game-table">
-    <div class="decorative-frame">
-        <div class="game-container">
-            <div class="dice-area">
-                @for (int i = 0; i < diceList.Count(); i++)
-                {
-                    <div class="dice-slot">
-                        <Dice DiceValue="@diceList[i]"
-                              OnToggleFreeze="value => ToggleDiceSelection(value)" />
-                    </div>
-                }
+﻿    <div class="game-table">
+        <div class="decorative-frame">
+            <div class="game-container">
+                <div class="dice-area">
+                    @for (int i = 0; i < diceList.Count(); i++)
+                    {
+                        <div class="dice-slot">
+                            <Dice DiceValue="@diceList[i]"
+                                  IsRolling="@diceList[i].IsRolling"
+                                  OnToggleFreeze="ToggleDiceSelection" />
+                        </div>
+                    }
+                </div>
+                <div class="center-artwork">
+                </div>
+                <div class="opponents-dice-area">
+                    @for (int i = 0; i < diceList.Count(); i++)
+                    {
+                        <div class="dice-slot">
+                            <Dice DiceValue="@diceList[i]"
+                                  IsRolling="@diceList[i].IsRolling"
+                                  OnToggleFreeze="ToggleDiceSelection" />
+                        </div>
+                    }
+                </div>
             </div>
-            <div class="center-artwork">
+            <div class="bottom-panel">
+                <button class="roll-button" @onclick="RollDice">Roll Dice</button>
+                <button class="end-turn-button" @onclick="EndTurn">End Turn</button>
             </div>
-            <div class="opponents-dice-area">
-                @for (int i = 0; i < diceList.Count(); i++)
-                {
-                    <div class="dice-slot">
-                        <Dice DiceValue="@diceList[i]"
-                              OnToggleFreeze="value => ToggleDiceSelection(value)" />
-                    </div>
-                }
-            </div>
-        </div>
-        <div class="bottom-panel">
-            <button class="roll-button" @onclick="RollDice">Roll Dice</button>
-            <button class="end-turn-button" @onclick="EndTurn">End Turn</button>
         </div>
     </div>
-</div>
 
-@code {
-    private int curPlayer = 1;
-    private List<DiceClass> diceList = new List<DiceClass>();
+    @code {
+        private int curPlayer = 1;
+        private List<DiceClass> diceList = new List<DiceClass>();
 
-    protected override void OnInitialized()
-    {
-        for (int i = 0; i < 5; i++)
+        protected override void OnInitialized()
         {
-            diceList.Add(new DiceClass { Id = i, Value = new Random().Next(1, 7) });
-        }
-    }
-
-    private void RollDice()
-    {
-        var rand = new Random();
-        foreach (var dice in diceList)
-        {
-            if (dice.IsReroll)
+            for (int i = 0; i < 5; i++)
             {
-                dice.Value = rand.Next(1, 7);
+                diceList.Add(new DiceClass { Id = i , IsRolling = false });
             }
         }
-    }
 
-    private void ToggleDiceSelection(DiceClass value)
-    {
-        var index = value.Id;
-        diceList[index].IsReroll = !diceList[index].IsReroll;
-    }
+        private async void RollDice()
+        {
+            foreach (var dice in diceList)
+            {
+                if (dice.IsReroll)
+                {
+                    dice.IsRolling = true;
+                }
+            }
 
-    private void EndTurn()
-    {
-        // Logic for ending the turn
+            StateHasChanged();
+
+            await Task.Delay(1000);
+
+            var rand = new Random();
+            foreach (var dice in diceList)
+            {
+                if (dice.IsReroll)
+                {
+                    dice.Value = rand.Next(1, 7);
+                    dice.IsRolling = false;
+                }
+            }
+
+            StateHasChanged();
+        }
+
+
+        private void ToggleDiceSelection(DiceClass value)
+        {
+            Console.WriteLine($"{value.Id} is toggling freeze status.");
+            value.IsReroll = !value.IsReroll;
+            Console.WriteLine($"After toggle: IsReroll for dice {value.Id} is {value.IsReroll}");
+
+            StateHasChanged();
+        }
+
+        private void EndTurn()
+        {
+            // Logic for ending the turn
+        }
     }
-}
