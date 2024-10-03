@@ -19,11 +19,24 @@
 </div>
 
 @code {
+    [Inject]
+    public GameClient GameClient { get; set; }
+
     [Parameter]
-    public List<Player> Players { get; set; }
+    public string RoomId { get; set; }
+
+    private List<Player> Players { get; set; }
 
     protected override Task OnInitializedAsync()
     {
+        GameClient.OnRoomsUpdated += StateHasChanged;
+
+        Players = GameClient.Rooms[RoomId].Game.GameState.Players;
         return Task.CompletedTask;
+    }
+
+    protected void Dispose()
+    {
+        GameClient.OnRoomsUpdated -= StateHasChanged;
     }
 }

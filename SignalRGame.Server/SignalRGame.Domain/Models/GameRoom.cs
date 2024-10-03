@@ -7,7 +7,7 @@ public class GameRoom
     public PockerOnDiceGame Game { get; set; } = new();
     public bool TryAddPlayer(Player player)
     {
-        if (Game.GameState.Players.Count < 2 && !Game.GameState.Players.Any(p => p.ConnectionId == player.ConnectionId))
+        if (Game.GameState.Players.Count < 2)
         {
             Game.AddPlayer(player);
             return true;

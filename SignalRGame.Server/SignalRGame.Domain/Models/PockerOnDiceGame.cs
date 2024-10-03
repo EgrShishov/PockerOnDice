@@ -7,20 +7,12 @@ public class PockerOnDiceGame
     //public List<Player> Players { get; set; } = new();// список всех игроков
     public int CurrentRound { get; set; } = 0;
     public GameState GameState { get; set; } = new();
-<<<<<<< HEAD
     //public string CurrentPlayerId { get; set; } = string.Empty;
     public int MaxRound { get; set; } = 2; // количество раундов. В каждом раунде игрок выбирает какие кости бросает
     public bool EndMiniGame = false;
 
     // начало игры
     public bool StartGame()
-=======
-    public string CurrentPlayerId { get; set; } = string.Empty;
-    public List<DiceClass> Dices = new(5); // за ход выбрасывается только 5
-    public int RollsRemaining { get; set; } = 3; // количество бросков. По дефолту игрок имеет 3 броска во время хода
-
-    public void StartGame()
->>>>>>> c28d09060da6a67f8667654cbb1edeb440ac7841
     {
         if (GameState.Players.Count > 1)
         {
@@ -37,7 +29,7 @@ public class PockerOnDiceGame
 	//Второй и последующие раунды(круги): После первого круга игрок может выбрать, какие кубики перебросить.
 	//После броска ход завершается, результат фиксируется.
 	//Делаем ход
-	public bool MakeMove(List<int> dicesSelection)
+	public bool MakeMove(List<DiceClass> dicesToReroll)
 	{
 		//if (playerId != GameState.CurrentPlayerId)
 		//    return false;
@@ -46,8 +38,7 @@ public class PockerOnDiceGame
 		if (currentPlayer is null)
 			return false;
         Console.WriteLine($"Server_MakeMove: CurrPlayer - id: {currentPlayer.Id}, name: {currentPlayer.Name}");
-		currentPlayer.SelectDiceToReroll(CurrentRound == 1 ? null : dicesSelection);
-		currentPlayer.RollDice();
+		currentPlayer.RollDice(CurrentRound == 1 ? null : dicesToReroll);
         // where should i handle keep and select dices logic?
         Console.WriteLine($"Server_CalculateCombination");
 		CalculateCombination(GameState.CurrentPlayerId);
@@ -73,17 +64,7 @@ public class PockerOnDiceGame
             CurrentRound++; // раунд завершён, нет ходов
             if (CurrentRound > MaxRound)
             {
-<<<<<<< HEAD
                 EndMiniGame = true;
-=======
-                if (diceSelection is null || !diceSelection.Contains(i))
-                {
-                    Dices[i] = new DiceClass
-                    {
-                        Value = rnd.Next(1, 7)
-                    };
-                }
->>>>>>> c28d09060da6a67f8667654cbb1edeb440ac7841
             }
 		}
         GameState.CurrentPlayerId = GameState.Players[nextPlayerIndex].Id;
@@ -119,6 +100,7 @@ public class PockerOnDiceGame
         bool combination = true;
         for (int i = 0; i < 5; i++)
         {
+            Console.WriteLine(player.Dices[i].Value);
             if (check[player.Dices[i].Value - 1] == 1)
             {
                 combination = false;

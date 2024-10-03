@@ -1,12 +1,5 @@
-<<<<<<< HEAD
-﻿<div class="dice" style="@GetDiceStyle()"></div>
-<div>
-    <InputCheckbox>Value</InputCheckbox>
-</div>
-=======
-﻿<div class="dice @GetAnimationClass() @GetFrozenClass()" style="@GetDiceStyle()" @onclick="@ToggleFreeze"></div>
+﻿<div class="dice @GetAnimationClass() @GetFrozenClass()" style="@GetDiceStyle()" @onclick="@ToggleFrosen"></div>
 
->>>>>>> c28d09060da6a67f8667654cbb1edeb440ac7841
 @code {
     [Parameter]
     public DiceClass DiceValue { get; set; }
@@ -27,9 +20,9 @@
 
     private string GetFrozenClass() => IsFrozen ? "frozen" : "";
 
-    private void ToggleFreeze()
+    private void ToggleFrosen()
     {
-        IsFrozen = IsFrozen ? false : true;
+        IsFrozen = !IsFrozen;
         OnToggleFreeze.Invoke(DiceValue);
     }
 }

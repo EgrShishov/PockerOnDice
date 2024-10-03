@@ -7,10 +7,13 @@ public interface IGameClient
 	Task PlayerJoined(string roomId, Player player);
 	Task PlayerLeft(string roomId, Player player);
 	Task GameStarted(string roomId, GameState gameState);
-	Task DiceRolled(string playerId, List<Player> winners, List<int> dicesToReroll, List<int> diceValues);
+	Task DiceRolled(string roomId, string playerId, List<DiceClass> Rerolldices);
 	Task RecieveWinners(string roomId, GameState gameState);
 	Task GameEnded(string roomId, Player winner);
 	Task ReceiveError(string errorMessage);
 	
 	Task RecieveGameState(string roomId, GameState gameState);
+	//Task NotifyNextTurn(string playerId);
+	//Task DiceFreezed(string playerId, List<int> indeciesToKeep);
+	//Task TurnEnded(string playerId, List<int> diceToReroll);
 }

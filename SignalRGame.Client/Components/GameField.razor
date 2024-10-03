@@ -3,58 +3,140 @@
         <div class="center-artwork">
         </div>
         <div class="dice-area">
-            @for (int i = 0; i < diceList.Count(); i++)
+            @if (p1_diceList is not null)
             {
-                <div class="dice-slot">
-                    <Dice DiceValue="@diceList[i]"
-                          OnToggleFreeze="value => ToggleDiceSelection(value)" />
-                </div>
+                for (int i = 0; i < p1_diceList.Count(); i++)
+                {
+                    <div class="dice-slot">
+                        <Dice DiceValue="@p1_diceList[i]"
+                              OnToggleFreeze="value => ToggleDiceSelection(value)" />
+                    </div>
+                }
             }
         </div>
         <div class="opponents-dice-area">
-            @for (int i = 0; i < diceList.Count(); i++)
+            @if (p2_diceList is not null)
             {
-                <div class="dice-slot">
-                    <Dice DiceValue="@diceList[i]"
-                          OnToggleFreeze="value => ToggleDiceSelection(value)" />
-                </div>
+                @for (int i = 0; i < p2_diceList.Count(); i++)
+                {
+                    <div class="dice-slot">
+                        <Dice DiceValue="@p2_diceList[i]"
+                        OnToggleFreeze="value => ToggleDiceSelection(value)" />
+                    </div>
+                }
             }
         </div>
         <div class="bottom-panel">
-            <button class="roll-button" @onclick="RollDice">Roll Dice</button>
-            <button class="end-turn-button" @onclick="EndTurn">End Turn</button>
+            @if (!CurrentRoom.Game.GameState.IsGameStarted)
+            {
+                if (CurrentRoom.Game.GameState.Players.Count() == 1)
+                {
+                    <button class="roll-button">Waiting Players</button>
+                }
+                else
+                {
+                    <button class="roll-button" @onclick="async() => await StartGame()">StartGame</button>
+                }
+            }
+            else
+            {
+                if (PlayerId == CurrentRoom.Game.GameState.CurrentPlayerId)
+                {
+                    <button class="roll-button" @onclick="async() => await RollDice()">Roll Dice</button>
+                }
+                else
+                {
+                    <button>Not your turn</button>
+                }
+            }
         </div>
     </div>
 </div>
 
 @code {
-    private int curPlayer = 1;
-    private List<DiceClass> diceList = new List<DiceClass>();
+
+    [Inject]
+    public NavigationManager? NavigationManager { get; set; }
+    [Inject]
+    public GameClient? GameClient { get; set; }
+
+    [Parameter]
+    public string? RoomId { get; set; }
+
+    private GameRoom? CurrentRoom { get; set; }
+
+    private string? PlayerId { get; set; }
+
+    private List<DiceClass> p1_diceList = new();
+    private List<DiceClass> p2_diceList = new();
 
     protected override void OnInitialized()
     {
-        for (int i = 0; i < 5; i++)
+        GameClient.OnRoomsUpdated += StateHasChanged;
+        GameClient.OnGameStateUpdated += StateHasChanged;
+        GameClient.OnGameStateUpdated += OnInitialized;
+
+        CurrentRoom = GameClient.Rooms[RoomId];
+        Console.WriteLine(CurrentRoom is null);
+        Console.WriteLine(CurrentRoom.Name);
+        PlayerId = GameClient.GetCurrentPlayerId();
+        if (CurrentRoom.Game.GameState.IsGameStarted)
         {
-            diceList.Add(new DiceClass { Id = i, Value = new Random().Next(1, 7) });
+            p1_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id == PlayerId).Dices;
+            p2_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id != PlayerId).Dices;
+        }
+        Console.WriteLine($"Room_Initialized: {CurrentRoom.Name} - id: {CurrentRoom.Id}");
+        Console.WriteLine($"Room_Initialized: player_id: {PlayerId}");
+    }
+
+    private void UpdateField(){
+
+    }
+    public void Dispose()
+    {
+        GameClient.OnRoomsUpdated -= StateHasChanged;
+        GameClient.OnGameStateUpdated -= StateHasChanged;
+    }
+
+    private async Task StartGame()
+    {
+        if (CurrentRoom is not null)
+        {
+            Console.WriteLine("Room_StartGame");
+            await GameClient.StartGame(CurrentRoom.Id);
+            //p1_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id == PlayerId).Dices;
+            //p2_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id != PlayerId).Dices;
+            //StateHasChanged();
+            Console.WriteLine("Room_StartGame_success");
         }
     }
 
-    private void RollDice()
+    private async Task RollDice()
     {
-        var rand = new Random();
-        foreach (var dice in diceList)
+        if (CurrentRoom is not null)
         {
-            if (!dice.IsSelected)
-            {
-                dice.Value = rand.Next(1, 7);
-            }
+            Console.WriteLine("Room_OnRollDice");
+            await GameClient.RollDice(CurrentRoom.Id, PlayerId, p1_diceList);
+            p1_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id == PlayerId).Dices;
+            p2_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id != PlayerId).Dices;
+            StateHasChanged();
+            Console.WriteLine("Room_OnRollDice_success");
         }
     }
 
     private void ToggleDiceSelection(DiceClass value)
     {
         var index = value.Id;
-        diceList[index].IsSelected = !diceList[index].IsSelected;
+        p1_diceList[index].IsReroll = !p1_diceList[index].IsReroll;
+    }
+
+    private async Task LeaveRoom()
+    {
+        if (GameClient is not null)
+        {
+            await GameClient.LeaveRoom(RoomId, GameClient.GetCurrentPlayerId());
+            NavigationManager.NavigateTo("/");
+        }
     }
 
     private void EndTurn()

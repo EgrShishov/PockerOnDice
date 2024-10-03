@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using SignalRGame.Client.Pages;
 using SignalRGame.Domain.Abstractions;
 using SignalRGame.Domain.Models;
 
@@ -53,25 +54,23 @@ namespace SignalRGame.Client
 		// присоединиться к комнате -> на сервер
 		public async Task<GameRoom> JoinRoom(string roomId, string playerName)
 		{
-			var room = Rooms[roomId];
-			if (room is null)
+			if (Rooms[roomId] is null)
 			{
 				return null;
 			}
 			OnRoomsUpdated?.Invoke();
-			Console.WriteLine($"Player joined room: {room.Name}");
+			Console.WriteLine($"Player joined room: {Rooms[roomId].Name}");
 			return await _hubConnection.InvokeAsync<GameRoom>(nameof(JoinRoom), roomId, playerName);
 		}
 
 		// игрок присоединился к комнате -> с сервера
 		public Task PlayerJoined(string roomId, Player player)
 		{
-			var room = Rooms[roomId];
-			if (room is not null)
+			if (Rooms[roomId] is not null)
 			{
-				room.Game.GameState.Players.Add(player);
+                Rooms[roomId].Game.GameState.Players.Add(player);
 			}
-			Console.WriteLine($"Player {player.Name} joined room: {room.Name}");
+			Console.WriteLine($"Player {player.Name} joined room: {Rooms[roomId].Name}");
 			OnRoomsUpdated?.Invoke();
 			return Task.CompletedTask;
 		}
@@ -132,7 +131,7 @@ namespace SignalRGame.Client
 		}
 
 		// бросок игрока -> на сервер
-		public async Task RollDice(string roomId, string playerId, List<int> diceToReroll)
+		public async Task RollDice(string roomId, string playerId, List<DiceClass> diceToReroll)
 		{
 			Console.WriteLine("Client_RollDice");
 			await _hubConnection.SendAsync(nameof(RollDice), roomId, playerId, diceToReroll);
@@ -141,24 +140,27 @@ namespace SignalRGame.Client
 		}
 
 		// результат броска игрока -> с сервера
-		public Task DiceRolled(string playerId, List<Player> winners, List<int> dicesToReroll, List<int> diceValues)
+		public Task DiceRolled(string roomId, string playerId, List<DiceClass> Rerolldices)
 		{
 			Console.WriteLine("Client_DiceRolled");
-			foreach (var value in diceValues)
-				Console.WriteLine(value);
-			// winners получают какой то отличительный знак
-			return Task.CompletedTask;
+
+			Rooms[roomId].Game.GameState.Players.FirstOrDefault(p => p.Id == playerId).Dices = Rerolldices;
+
+            OnGameStateUpdated?.Invoke();
+            Console.WriteLine("Client_DiceRolled_success");
+            // winners получают какой то отличительный знак
+            return Task.CompletedTask;
 		}
 
 		// состояние игры изменилось, ход переходить следующему -> с сервера
 		public Task RecieveGameState(string roomId, GameState gameState)
 		{
 			Console.WriteLine("Client_RecieveGameState");
-			if (Rooms.TryGetValue(roomId, out GameRoom room))
+			if (Rooms[roomId] is not null)
 			{
-				room.Game.GameState = gameState;
-				OnGameStateUpdated?.Invoke();
-				Console.WriteLine($"Client_RecieveGameState: CurrPlayerId: {room.Game.GameState.CurrentPlayerId}");
+				Rooms[roomId].Game.GameState = gameState;
+                OnGameStateUpdated?.Invoke();
+				Console.WriteLine($"Client_RecieveGameState: CurrPlayerId: {Rooms[roomId].Game.GameState.CurrentPlayerId}");
 				Console.WriteLine("Client_RecieveGameState_success");
 				//Console.WriteLine($"Game state changed");
 			}

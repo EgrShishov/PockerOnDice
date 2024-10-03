@@ -52,8 +52,10 @@ public class GameHub : Hub<IGameClient>, IGameHub
 		var player = new Player
 		{
 			Name = playerName,
-			ConnectionId = Context.ConnectionId
-		};
+			ConnectionId = Context.ConnectionId,
+			Id = Context.ConnectionId,
+            Balance = 500
+        };
 
 		if (!room.TryAddPlayer(player))
 		{
@@ -127,7 +129,7 @@ public class GameHub : Hub<IGameClient>, IGameHub
 	}
 
     // игрок бросает кубики
-	public async Task RollDice(string roomId, string playerId, List<int> dicesToReroll)
+	public async Task RollDice(string roomId, string playerId, List<DiceClass> dicesToReroll)
 	{
 		Console.WriteLine("Server_RollDice");
 		var room = _rooms.FirstOrDefault(r => r.Id.Equals(roomId));
@@ -137,18 +139,21 @@ public class GameHub : Hub<IGameClient>, IGameHub
 			Console.WriteLine("Server_MakeMove_success");
 			room.Game.NextTurn();
 			Console.WriteLine("Server_NextTurn_success");
-			var winners = new List<Player>();
-			winners = room.Game.DetermineRoundWinners();
-			Console.WriteLine("Server_DetermineWinner_success");
+			//var winners = new List<Player>();
+			//winners = room.Game.DetermineRoundWinners();
+			//Console.WriteLine("Server_DetermineWinner_success");
 
-			await Clients.Group(room.Id).DiceRolled(playerId, winners, dicesToReroll,
-													room.Game.GameState.Players
-																	.FirstOrDefault(p => p.Id == playerId)
-																	.GetValuesDice());
+			//await Clients.Group(room.Id).DiceRolled(roomId, playerId, room.Game.GetCurrentPlayer().Dices);
+			Console.WriteLine("Server_MAMA");
+			foreach (var dice in room.Game.GameState.Players[0].Dices)
+			{
+				Console.WriteLine(dice.Value);
+			}
 			await Clients.Group(room.Id).RecieveGameState(room.Id, room.Game.GameState);
 
 			if (room.Game.IsGameEnd())
 			{
+				Console.WriteLine("Server_GameEnd");
 				var winner = room.Game.GetWinner();
 				await Clients.Group(roomId).GameEnded(roomId, winner);
 				return;
@@ -156,7 +161,8 @@ public class GameHub : Hub<IGameClient>, IGameHub
 
 			if (room.Game.IsEndMiniGame())
 			{
-				room.Game.Reset();
+                Console.WriteLine("Server_MiniGameEnd");
+                room.Game.Reset();
 				
 				await Clients.Group(roomId).RecieveWinners(roomId, room.Game.GameState);
 				return;
