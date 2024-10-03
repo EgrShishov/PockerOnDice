@@ -3,14 +3,21 @@
 
 <PageTitle>Room @RoomId</PageTitle>
 
-<GameField RoomId="@RoomId"/>
-<PlayersList RoomId="@RoomId"/>
+<div class="game-room">
+	<PlayersList Players="@CurrentRoom.Game.GameState.Players" />
+	<GameField />
+	<Betting CurrentBet="@CurrentBet" TotalPot="@TotalPot" />
+</div>
 
 @code {
 	[Inject]
 	public NavigationManager NavigationManager { get; set; }
 	[Inject]
 	public GameClient GameClient { get; set; }
+
+	public decimal CurrentBet = 100;
+	public decimal TotalPot = 150;
+
 	[Parameter]
 	public string RoomId { get; set; }
 

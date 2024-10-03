@@ -1,57 +1,33 @@
-﻿<div class="game-table">
-    <div class="decorative-frame">
-        <div class="center-artwork">
-        </div>
-        <div class="dice-area">
-            @if (p1_diceList is not null)
-            {
-                for (int i = 0; i < p1_diceList.Count(); i++)
-                {
-                    <div class="dice-slot">
-                        <Dice DiceValue="@p1_diceList[i]"
-                              OnToggleFreeze="value => ToggleDiceSelection(value)" />
-                    </div>
-                }
-            }
-        </div>
-        <div class="opponents-dice-area">
-            @if (p2_diceList is not null)
-            {
-                @for (int i = 0; i < p2_diceList.Count(); i++)
-                {
-                    <div class="dice-slot">
-                        <Dice DiceValue="@p2_diceList[i]"
-                        OnToggleFreeze="value => ToggleDiceSelection(value)" />
-                    </div>
-                }
-            }
-        </div>
-        <div class="bottom-panel">
-            @if (!CurrentRoom.Game.GameState.IsGameStarted)
-            {
-                if (CurrentRoom.Game.GameState.Players.Count() == 1)
-                {
-                    <button class="roll-button">Waiting Players</button>
-                }
-                else
-                {
-                    <button class="roll-button" @onclick="async() => await StartGame()">StartGame</button>
-                }
-            }
-            else
-            {
-                if (PlayerId == CurrentRoom.Game.GameState.CurrentPlayerId)
-                {
-                    <button class="roll-button" @onclick="async() => await RollDice()">Roll Dice</button>
-                }
-                else
-                {
-                    <button>Not your turn</button>
-                }
-            }
+﻿    <div class="game-table">
+        <div class="decorative-frame">
+            <div class="game-container">
+                <div class="dice-area">
+                    @for (int i = 0; i < p1_diceList.Count(); i++)
+                    {
+                        <div class="dice-slot @(p1_diceList[i].IsReroll ? "" : "frozen")">
+                            <Dice DiceValue="@p1_diceList[i]"
+                                  OnToggleFreeze="ToggleDiceSelection" />
+                        </div>
+                    }
+                </div>
+                <div class="center-artwork">
+                </div>
+                <div class="opponents-dice-area">
+                    @for (int i = 0; i < p2_diceList.Count(); i++)
+                    {
+                        <div class="dice-slot @(p2_diceList[i].IsReroll ? "" : "frozen")">
+                            <Dice DiceValue="@p2_diceList[i]"
+                                  OnToggleFreeze="ToggleDiceSelection" />
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="bottom-panel">
+                <button class="roll-button" @onclick="RollDice">Roll Dice</button>
+                <button class="end-turn-button" @onclick="EndTurn">End Turn</button>
+            </div>
         </div>
     </div>
-</div>
 
 @code {
 
@@ -108,6 +84,28 @@
             //p2_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id != PlayerId).Dices;
             //StateHasChanged();
             Console.WriteLine("Room_StartGame_success");
+            foreach (var dice in p1_diceList)
+            {
+                if (dice.IsReroll)
+                {
+                    dice.IsRolling = true;
+                }
+            }
+
+            StateHasChanged();
+
+            await Task.Delay(1000);
+
+            var rand = new Random();
+            foreach (var dice in p1_diceList)
+            {
+                if (dice.IsReroll)
+                {
+                    dice.IsRolling = false;
+                }
+            }
+
+            StateHasChanged();
         }
     }
 

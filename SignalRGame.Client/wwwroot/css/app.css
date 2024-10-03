@@ -120,40 +120,46 @@ code {
     display: inline-block;
 }
 
-    .rolling {
-        animation: roll 1s ease-out;
+.dice.rolling {
+    animation: roll 1s ease-out;
+}
+
+@keyframes roll {
+    0% {
+        transform: rotate(0deg);
+        background-image: url('/sources/dice1.png');
     }
 
-    .dice-img {
-        width: 100%;
-        height: 100%;
+    16.67% {
+        transform: rotate(60deg);
+        background-image: url('/sources/dice2.png');
     }
 
-    @keyframes roll {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        25% {
-            transform: rotate(90deg);
-        }
-
-        50% {
-            transform: rotate(180deg);
-        }
-
-        75% {
-            transform: rotate(270deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
+    33.33% {
+        transform: rotate(120deg);
+        background-image: url('/sources/dice3.png');
     }
 
-        .dice.rolling {
-            animation: rollAnimation 1s;
-        }
+    50% {
+        transform: rotate(180deg);
+        background-image: url('/sources/dice4.png');
+    }
+
+    66.67% {
+        transform: rotate(240deg);
+        background-image: url('/sources/dice5.png');
+    }
+
+    83.33% {
+        transform: rotate(300deg);
+        background-image: url('/sources/dice6.png');
+    }
+
+    100% {
+        transform: rotate(360deg);
+        background-image: url('/sources/dice1.png'); /* Reset to the first die */
+    }
+}
 
 body, html {
     margin: 0;
@@ -251,10 +257,12 @@ body, html {
 
 .game-table {
     background-image: url('/sources/wooden-texture.jpg');
-    border: 5px solid #8a734d; /* Золотая рамка */
+    border: 5px solid #8a734d;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
     position: relative;
-    margin: 0 auto;
+    width: 100vh;
+    display: flex;
+    margin: 100px auto;
 }
 
 .decorative-frame {
@@ -268,19 +276,31 @@ body, html {
 }
 
 .center-artwork {
-    background-image: url('/sources/board.png');
+    background-image: url('/sources/tableart2.Jpeg');
     background-size: cover;
     background-position: center;
     width: 100%;
-    height: 200px;
+    height: 250px;
     border: 2px solid #8a734d;
-    border-radius: 10px;
+    border-radius: 200px;
 }
 
 .dice-area {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     margin: 20px 0;
+}
+
+.opponents-dice-area {
+    display: flex;
+    justify-content: flex-start;
+    margin: 20px 0;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .dice-slot {
@@ -320,49 +340,69 @@ body, html {
     }
 
 .player-list {
+    background-image: url('/sources/list.png');
+    background-size: cover;
+    background-position: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #2b2b2b;
-    border: 2px solid #8a734d;
-    padding: 20px;
     border-radius: 10px;
-    width: 300px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
-    margin: 0 auto;
+    width: 200px;
+    height: auto;
+    position: absolute;
+    z-index: 100;
+}
+
+.players {
+    margin: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .player-item {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
     width: 100%;
-    padding: 10px;
-    margin: 5px 0;
-    background-color: #3e3e3e;
-    border-radius: 5px;
-    border: 1px solid #d4b45b;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.player-name {
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Cinzel', serif;
+    color: #fff;
     font-size: 18px;
-    color: #d4b45b;
-    text-shadow: 0 0 5px #000;
 }
 
 .no-players {
+    color: #fff;
+    font-size: 18px;
     text-align: center;
+    font-family: 'Cinzel', serif;
 }
 
-.scroll-message {
-    background-image: url('/sources/list.png');
-    background-size: cover;
-    color: #d4b45b;
-    font-size: 20px;
-    padding: 20px;
+.game-room {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin: 20px;
+}
+
+.betting-panel {
+    background-color: #3b3b3b; 
     border: 2px solid #8a734d;
-    border-radius: 5px;
-    text-shadow: 0 0 5px #000;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    margin-top: 20px;
+}
+
+.bet-info {
+    margin-bottom: 10px;
+}
+
+.bet-actions button {
+    margin-right: 10px;
+}
+
+.frozen {
+    opacity: 0.7; 
+    border: 2px solid blue;
 }

@@ -10,6 +10,7 @@ public class Player
     // Combination(ранг комбинации, score комбинации этого ранга)
     // результат конкретного игрока в текущем раунде. Сбрасывается каждую новую игру.
 	public Combination Combo { get; set; } = new();
+	public decimal CurrentBet { get; set; } = 0;
     public int Balance { get; set; } = 0;
 
     public void RollDice(List<DiceClass>? dicesToReroll) // бросаем кости

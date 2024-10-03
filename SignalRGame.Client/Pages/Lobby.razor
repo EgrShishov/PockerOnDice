@@ -42,6 +42,9 @@
 	[Inject]
 	public GameClient GameClient { get; set; }
 
+	public decimal CurrentBet = 100;
+	public decimal TotalPot = 150;
+
 	private List<Player> Players { get; set; } = new()
 	{
 		new Player {Name = "mama"},
