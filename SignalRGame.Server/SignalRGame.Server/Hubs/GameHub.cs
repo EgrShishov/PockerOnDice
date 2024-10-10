@@ -1,4 +1,6 @@
-﻿namespace SignalRGame.Server.Hubs;
+﻿using System.Reflection;
+
+namespace SignalRGame.Server.Hubs;
 
 public class GameHub : Hub<IGameClient>, IGameHub
 {
@@ -30,7 +32,8 @@ public class GameHub : Hub<IGameClient>, IGameHub
 			await Clients.Caller.ReceiveError("Error creating room: Room is full or invalid.");
 		}
 
-		_rooms.Add(room);
+        _players.Add(player);
+        _rooms.Add(room);
 
 		await Groups.AddToGroupAsync(Context.ConnectionId, room.Id);
 		Console.WriteLine("Server_RoomCreatedSuccess");
@@ -86,11 +89,13 @@ public class GameHub : Hub<IGameClient>, IGameHub
 			await Clients.Caller.ReceiveError("Player not found.");
 			return;
 		}
+        _players.Remove(player);
 
-		room.Game.GameState.Players.Remove(player);
-		_players.Remove(player);
-		await Clients.Group(roomId).PlayerLeft(roomId, player);
 
+        var player_ = room.Game.GameState.Players.FirstOrDefault(p => p.Id == playerId);
+		room.Game.GameState.Players.Remove(player_);
+		
+		await Clients.All.PlayerLeft(roomId, player_);
 		if (!room.Game.GameState.Players.Any())
 		{
 			_rooms.Remove(room);
@@ -120,36 +125,25 @@ public class GameHub : Hub<IGameClient>, IGameHub
 		Console.WriteLine($"Server_StartGame: CurrPlayerId: {room.Game.GameState.CurrentPlayerId}");
 		Console.WriteLine("Server_StartGame_success");
 		await Clients.Group(roomId).GameStarted(roomId, room.Game.GameState);
-		await Clients.Group(room.Id).RecieveGameState(room.Id, room.Game.GameState);
-
-		/*new GameState{
-			RoomId = roomId,
-			IsGameStarted = true
-		};*/
 	}
 
     // игрок бросает кубики
-	public async Task RollDice(string roomId, string playerId, List<DiceClass> dicesToReroll)
+	public async Task RollDice(string roomId, string playerId, int bet, List<DiceClass> dicesToReroll)
 	{
 		Console.WriteLine("Server_RollDice");
 		var room = _rooms.FirstOrDefault(r => r.Id.Equals(roomId));
-		Console.WriteLine($"{room.Name}");
-		if (room is not null && room.Game.MakeMove(dicesToReroll))
+
+		if (room is not null && room.Game.MakeMove(bet, dicesToReroll))
 		{
 			Console.WriteLine("Server_MakeMove_success");
 			room.Game.NextTurn();
 			Console.WriteLine("Server_NextTurn_success");
-			//var winners = new List<Player>();
-			//winners = room.Game.DetermineRoundWinners();
-			//Console.WriteLine("Server_DetermineWinner_success");
 
-			//await Clients.Group(room.Id).DiceRolled(roomId, playerId, room.Game.GetCurrentPlayer().Dices);
-			Console.WriteLine("Server_MAMA");
-			foreach (var dice in room.Game.GameState.Players[0].Dices)
-			{
-				Console.WriteLine(dice.Value);
-			}
-			await Clients.Group(room.Id).RecieveGameState(room.Id, room.Game.GameState);
+			var winners = room.Game.DetermineRoundWinners();
+            Console.WriteLine("Server_DetermineWinners_success");
+
+            await Clients.Group(room.Id).RecieveGameState(room.Id, room.Game.GameState);
+			await Clients.Group(roomId).RecieveWinners(roomId, winners);
 
 			if (room.Game.IsGameEnd())
 			{
@@ -159,18 +153,14 @@ public class GameHub : Hub<IGameClient>, IGameHub
 				return;
 			}
 
-			if (room.Game.IsEndMiniGame())
-			{
+            if (room.Game.IsEndMiniGame())
+            {
                 Console.WriteLine("Server_MiniGameEnd");
-                room.Game.Reset();
-				
-				await Clients.Group(roomId).RecieveWinners(roomId, room.Game.GameState);
-				return;
-			}
+                await Clients.Group(roomId).MiniGameEnded(roomId, room.Game.GameState.TotalPot);
+                return;
+            }
 
-			Console.WriteLine("Server_RollDice_success");
-			//await Clients.Group(roomId).RecieveGameState(roomId, room.Game.GameState);
-			//await NotifyNextTurn(room.Game.GameState.CurrentPlayerId);
+            Console.WriteLine("Server_RollDice_success");
 		}
 		else
 		{
@@ -179,13 +169,72 @@ public class GameHub : Hub<IGameClient>, IGameHub
 		}
 	}
 
-	//¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
-	//************************ПАРА-ПАРА-ПАМ Конец***************************
-	//______________________________________________________________________
+    // игрок бросает кубики
+    public async Task PassGame(string roomId, string playerId)
+    {
+        Console.WriteLine("Server_PassGame");
+        var room = _rooms.FirstOrDefault(r => r.Id.Equals(roomId));
+
+        if (room is not null)
+        {
+			room.Game.PlayerPass(playerId);
+
+			room.Game.NextTurn();
+
+            var winners = room.Game.DetermineRoundWinners();
+            Console.WriteLine("Server_DetermineWinners_success");
+
+            await Clients.Group(roomId).RecieveGameState(roomId, room.Game.GameState);
+            await Clients.Group(roomId).RecieveWinners(roomId, winners);
+
+            if (room.Game.IsGameEnd())
+            {
+                Console.WriteLine("Server_GameEnd");
+                var winner = room.Game.GetWinner();
+                await Clients.Group(roomId).GameEnded(roomId, winner);
+                return;
+            }
+
+            if (room.Game.IsEndMiniGame())
+            {
+                Console.WriteLine("Server_MiniGameEnd");
+                await Clients.Group(roomId).MiniGameEnded(roomId, room.Game.GameState.TotalPot);
+                return;
+            }
+
+            Console.WriteLine("Server_PassGame_success");
+        }
+        else
+        {
+            await Clients.All.ReceiveError("Invalid move or room not found");
+            return;
+        }
+    }
+
+    public async Task ContinueGame(string roomId)
+    {
+        Console.WriteLine("Server_ContinueGame");
+        var room = _rooms.FirstOrDefault(r => r.Id.Equals(roomId));
+        if (room is null)
+        {
+            Console.WriteLine("Server_Continue_NOT_FOUND_ROOM");
+            await Clients.Caller.ReceiveError("Cannot find room.");
+            return;
+        }
+
+        room.Game.Reset();
+        Console.WriteLine($"Server_ContinueGame: CurrPlayerId: {room.Game.GameState.CurrentPlayerId}");
+        Console.WriteLine("Server_ContinueGame_success");
+        await Clients.Group(roomId).GameContinued(roomId, room.Game.GameState);
+    }
+
+    //¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+    //************************ПАРА-ПАРА-ПАМ Конец***************************
+    //______________________________________________________________________
 
 
 
-	public async Task UpdateRoomsList(List<GameRoom> rooms)
+    public async Task UpdateRoomsList(List<GameRoom> rooms)
 	{
 		await Clients.All.RecieveRoomsList(rooms);
 	}

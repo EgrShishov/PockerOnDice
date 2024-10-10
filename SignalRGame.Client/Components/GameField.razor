@@ -1,34 +1,73 @@
-﻿    <div class="game-table">
+﻿
+    <div class="game-table">
         <div class="decorative-frame">
             <div class="game-container">
-                <div class="dice-area">
-                    @for (int i = 0; i < p1_diceList.Count(); i++)
-                    {
-                        <div class="dice-slot @(p1_diceList[i].IsReroll ? "" : "frozen")">
-                            <Dice DiceValue="@p1_diceList[i]"
-                                  OnToggleFreeze="ToggleDiceSelection" />
-                        </div>
-                    }
-                </div>
-                <div class="center-artwork">
-                </div>
                 <div class="opponents-dice-area">
-                    @for (int i = 0; i < p2_diceList.Count(); i++)
+                    @for (int i = 0; i < opponents_diceList.Count(); i++)
                     {
-                        <div class="dice-slot @(p2_diceList[i].IsReroll ? "" : "frozen")">
-                            <Dice DiceValue="@p2_diceList[i]"
+                        <div class="dice-slot @(opponents_diceList[i].IsReroll ? "" : "frozen")">
+                            <Dice DiceValue="@opponents_diceList[i]"
+                                  IsRolling="@opponents_diceList[i].IsRolling"
                                   OnToggleFreeze="ToggleDiceSelection" />
                         </div>
                     }
                 </div>
+            <div class="center-artwork">
+            </div>
+            <div class="dice-area">
+                <button class="balance-button">
+                    @CurrentRoom.Game.GameState.Players.FirstOrDefault(x => x.Id == PlayerId).Balance
+                </button>
+                @for (int i = 0; i < player_diceList.Count(); i++)
+                {
+                    <div class="dice-slot @(player_diceList[i].IsReroll ? "" : "frozen")">
+                        <Dice DiceValue="@player_diceList[i]"
+                              IsRolling="@player_diceList[i].IsRolling"
+                              OnToggleFreeze="ToggleDiceSelection" />
+                    </div>
+                }
+            </div>
             </div>
             <div class="bottom-panel">
-                <button class="roll-button" @onclick="RollDice">Roll Dice</button>
-                <button class="end-turn-button" @onclick="EndTurn">End Turn</button>
+                @if (CurrentRoom.Game.GameState.Players.Count() > 1 && CurrentRoom.Game.GameState.IsGameStarted)
+                {
+                    if(CurrentRoom.Game.GameState.EndMiniGame == true)
+                    {
+                        <button class="roll-button" @onclick="LeaveRoom">LeaveRoom</button>
+                        <button class="roll-button" @onclick="Continue">Continue</button>
+                    }
+                    else
+                    {
+                        if (CurrentRoom.Game.GameState.CurrentPlayerId == PlayerId)
+                        {
+                            <button class="roll-button" @onclick="RollDice">Roll Dice</button>
+                        }
+                        else
+                        {
+                            <button class="roll-button">Not your turn</button>
+                        }
+                    }
+                }
+                else if (CurrentRoom.Game.GameState.Players.Count() > 1 && !CurrentRoom.Game.GameState.IsGameStarted)
+                {
+                    <button class="roll-button" @onclick="LeaveRoom">LeaveRoom</button>
+                    <button class="roll-button" @onclick="StartGame">Start Game</button>
+                }
+
+                @if (CurrentRoom.Game.GameState.Players.Count() < 2)
+                {
+                <button class="roll-button" @onclick="LeaveRoom">LeaveRoom</button>
+                    <button class="end-turn-button">Waiting for other players</button>
+                }
             </div>
         </div>
     </div>
 
+<Betting CurrentBet="@CurrentBet"
+         GameCurrentBet="@CurrentRoom.Game.GameState.GameCurrentBet"
+         TotalPot="@CurrentRoom.Game.GameState.TotalPot"
+         NewBet="@UpdateBet"
+         PassGame = "@Pass"/>
 @code {
 
     [Inject]
@@ -42,36 +81,57 @@
     private GameRoom? CurrentRoom { get; set; }
 
     private string? PlayerId { get; set; }
+    private int CurrentBet { get; set; }
 
-    private List<DiceClass> p1_diceList = new();
-    private List<DiceClass> p2_diceList = new();
+    private List<DiceClass> player_diceList = new();
+    private List<DiceClass> opponents_diceList = new();
 
     protected override void OnInitialized()
     {
-        GameClient.OnRoomsUpdated += StateHasChanged;
-        GameClient.OnGameStateUpdated += StateHasChanged;
-        GameClient.OnGameStateUpdated += OnInitialized;
+        GameClient.OnGameStateUpdated += UpdateField;
 
         CurrentRoom = GameClient.Rooms[RoomId];
         Console.WriteLine(CurrentRoom is null);
         Console.WriteLine(CurrentRoom.Name);
         PlayerId = GameClient.GetCurrentPlayerId();
-        if (CurrentRoom.Game.GameState.IsGameStarted)
+        if (CurrentRoom.Game.GameState is not null)
         {
-            p1_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id == PlayerId).Dices;
-            p2_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id != PlayerId).Dices;
+            CurrentBet = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id == PlayerId).CurrentBet;
+            if (CurrentRoom.Game.GameState.IsGameStarted)
+            {
+                player_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id == PlayerId).Dices;
+                opponents_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id != PlayerId).Dices;
+            }
         }
-        Console.WriteLine($"Room_Initialized: {CurrentRoom.Name} - id: {CurrentRoom.Id}");
-        Console.WriteLine($"Room_Initialized: player_id: {PlayerId}");
+        Console.WriteLine($"Room_Updated: {CurrentRoom.Name} - id: {CurrentRoom.Id}");
+        Console.WriteLine($"Room_Updated: player_id: {PlayerId}");
     }
 
-    private void UpdateField(){
+    private void UpdateField(string roomId)
+    {
+        if (roomId != RoomId)
+            return;
 
+        CurrentRoom = GameClient.Rooms[RoomId];
+        Console.WriteLine(CurrentRoom is null);
+        Console.WriteLine(CurrentRoom.Name);
+        if (CurrentRoom.Game.GameState is not null)
+        {
+            CurrentBet = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id == PlayerId).CurrentBet;
+            if (CurrentRoom.Game.GameState.IsGameStarted)
+            {
+                player_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id == PlayerId).Dices;
+                opponents_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id != PlayerId).Dices;
+            }
+        }
+        Console.WriteLine($"Room_Updated: {CurrentRoom.Name} - id: {CurrentRoom.Id}");
+        Console.WriteLine($"Room_Updated: player_id: {PlayerId}");
+        StateHasChanged();
     }
+
     public void Dispose()
     {
-        GameClient.OnRoomsUpdated -= StateHasChanged;
-        GameClient.OnGameStateUpdated -= StateHasChanged;
+        GameClient.OnGameStateUpdated -= UpdateField;
     }
 
     private async Task StartGame()
@@ -80,32 +140,7 @@
         {
             Console.WriteLine("Room_StartGame");
             await GameClient.StartGame(CurrentRoom.Id);
-            //p1_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id == PlayerId).Dices;
-            //p2_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id != PlayerId).Dices;
-            //StateHasChanged();
             Console.WriteLine("Room_StartGame_success");
-            foreach (var dice in p1_diceList)
-            {
-                if (dice.IsReroll)
-                {
-                    dice.IsRolling = true;
-                }
-            }
-
-            StateHasChanged();
-
-            await Task.Delay(1000);
-
-            var rand = new Random();
-            foreach (var dice in p1_diceList)
-            {
-                if (dice.IsReroll)
-                {
-                    dice.IsRolling = false;
-                }
-            }
-
-            StateHasChanged();
         }
     }
 
@@ -113,32 +148,71 @@
     {
         if (CurrentRoom is not null)
         {
+            if (CurrentBet < CurrentRoom.Game.GameState.GameCurrentBet)
+            {
+                return;
+            }
+
             Console.WriteLine("Room_OnRollDice");
-            await GameClient.RollDice(CurrentRoom.Id, PlayerId, p1_diceList);
-            p1_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id == PlayerId).Dices;
-            p2_diceList = CurrentRoom.Game.GameState.Players.FirstOrDefault(p => p.Id != PlayerId).Dices;
+            foreach(var dice in player_diceList)
+            {
+                Console.WriteLine($"dice{dice.Id}: {dice.IsReroll}");
+            }
+
+            foreach (var dice in player_diceList)
+            {
+                if (dice.IsReroll)
+                {
+                    dice.IsRolling = true;
+                }
+            }
             StateHasChanged();
+            //поменять местами на сервере сделать false
+            Console.WriteLine("Begin1000");
+            await Task.Delay(1000);
+            Console.WriteLine("End1000");
+
+            await GameClient.RollDice(CurrentRoom.Id, PlayerId, CurrentBet, player_diceList);
+
             Console.WriteLine("Room_OnRollDice_success");
         }
+    }
+
+    private async void Pass()
+    {
+        if (CurrentRoom.Game.GameState.CurrentPlayerId == PlayerId)
+        {
+            await GameClient.PassGame(CurrentRoom.Id, PlayerId);
+        }
+    }
+
+    private void UpdateBet(int value)
+    {
+        CurrentBet = value;
+    }
+
+    private async Task Continue()
+    {
+        Console.WriteLine("Room_Continue");
+        await GameClient.ContinueGame(CurrentRoom.Id);
+        Console.WriteLine("Room_Continue_success");
     }
 
     private void ToggleDiceSelection(DiceClass value)
     {
         var index = value.Id;
-        p1_diceList[index].IsReroll = !p1_diceList[index].IsReroll;
+        player_diceList[index].IsReroll = !player_diceList[index].IsReroll;
+        Console.WriteLine(player_diceList[index].IsReroll);
+        StateHasChanged();
     }
 
     private async Task LeaveRoom()
     {
         if (GameClient is not null)
         {
-            await GameClient.LeaveRoom(RoomId, GameClient.GetCurrentPlayerId());
+            await GameClient.LeaveRoom(RoomId, PlayerId);
             NavigationManager.NavigateTo("/");
         }
     }
 
-    private void EndTurn()
-    {
-        // Logic for ending the turn
-    }
 }

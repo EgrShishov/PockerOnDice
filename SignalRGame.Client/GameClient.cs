@@ -10,7 +10,7 @@ namespace SignalRGame.Client
 		private readonly HubConnection _hubConnection;
 		public Dictionary<string, GameRoom> Rooms { get; set; } = new();
 		public event Action OnRoomsUpdated;
-		public event Action OnGameStateUpdated;
+		public event Action<string> OnGameStateUpdated;
 
 		public GameClient(HubConnection hubConnection)
 		{
@@ -20,6 +20,7 @@ namespace SignalRGame.Client
 			_hubConnection.On<string, Player>(nameof(PlayerJoined), PlayerJoined);
 			_hubConnection.On<string, Player>(nameof(PlayerLeft), PlayerLeft);
 			_hubConnection.On<string, GameState>(nameof(GameStarted), GameStarted);
+			_hubConnection.On<string, GameState>(nameof(GameContinued), GameContinued);
 			//_hubConnection.On<string, List<int>>(nameof(DiceRolled), DiceRolled);
 			//_hubConnection.On<string, List<int>>(nameof(DiceFreezed), DiceFreezed);
 			_hubConnection.On<string>(nameof(ReceiveError), ReceiveError);
@@ -41,6 +42,7 @@ namespace SignalRGame.Client
 		{
 			Console.WriteLine("Client_RecieveRoomList");
 
+			Rooms.Clear();
 			foreach (var room in rooms)
 			{
 				Rooms.TryAdd(room.Id, room);
@@ -58,7 +60,6 @@ namespace SignalRGame.Client
 			{
 				return null;
 			}
-			OnRoomsUpdated?.Invoke();
 			Console.WriteLine($"Player joined room: {Rooms[roomId].Name}");
 			return await _hubConnection.InvokeAsync<GameRoom>(nameof(JoinRoom), roomId, playerName);
 		}
@@ -71,8 +72,9 @@ namespace SignalRGame.Client
                 Rooms[roomId].Game.GameState.Players.Add(player);
 			}
 			Console.WriteLine($"Player {player.Name} joined room: {Rooms[roomId].Name}");
-			OnRoomsUpdated?.Invoke();
-			return Task.CompletedTask;
+            OnRoomsUpdated?.Invoke();
+            OnGameStateUpdated?.Invoke(roomId);
+            return Task.CompletedTask;
 		}
 
 		// покинуть комнату -> на сервер
@@ -83,7 +85,6 @@ namespace SignalRGame.Client
 			{
 				return;
 			}
-			OnRoomsUpdated?.Invoke();
 			Console.WriteLine($"Player left room: {room.Name}");
 			await _hubConnection.InvokeAsync(nameof(LeaveRoom), roomId, playerId);
 		}
@@ -94,10 +95,12 @@ namespace SignalRGame.Client
 			var room = Rooms[roomId];
 			if (room is not null)
 			{
-				if (room.Game.GameState.Players.Contains(player))
-					room.Game.GameState.Players.Remove(player);
+				var player_ = room.Game.GameState.Players.FirstOrDefault(p => p.Id == player.Id);
+				room.Game.GameState.Players.Remove(player_);
+				Console.WriteLine("MAMAMAMAMA");
 			}
 			OnRoomsUpdated?.Invoke();
+			OnGameStateUpdated?.Invoke(roomId);
 			return Task.CompletedTask;
 		}
 
@@ -123,7 +126,7 @@ namespace SignalRGame.Client
 			if (room is not null)
 			{
 				room.Game.GameState = gameState;
-				OnGameStateUpdated?.Invoke();
+				OnGameStateUpdated?.Invoke(roomId);
 				Console.WriteLine($"Client_GameStarted: CurrPlayerId: {room.Game.GameState.CurrentPlayerId}");
 				Console.WriteLine("Client_GameStarted_success");
 			}
@@ -131,25 +134,25 @@ namespace SignalRGame.Client
 		}
 
 		// бросок игрока -> на сервер
-		public async Task RollDice(string roomId, string playerId, List<DiceClass> diceToReroll)
+		public async Task RollDice(string roomId, string playerId, int bet, List<DiceClass> diceToReroll)
 		{
 			Console.WriteLine("Client_RollDice");
-			await _hubConnection.SendAsync(nameof(RollDice), roomId, playerId, diceToReroll);
+			await _hubConnection.SendAsync(nameof(RollDice), roomId, playerId, bet, diceToReroll);
 			Console.WriteLine("Client_RollDice_success");
-			//Console.WriteLine($"Dice rolled {playerId}");
 		}
 
-		// результат броска игрока -> с сервера
-		public Task DiceRolled(string roomId, string playerId, List<DiceClass> Rerolldices)
+        // игрок пасанул -> на сервер
+        public async Task PassGame(string roomId, string playerId)
+        {
+            Console.WriteLine("Client_PassGame");
+            await _hubConnection.SendAsync(nameof(PassGame), roomId, playerId);
+            Console.WriteLine("Client_PassGame_success");
+        }
+
+        public Task RecieveWinners(string roomId, List<Player> winners)
 		{
-			Console.WriteLine("Client_DiceRolled");
-
-			Rooms[roomId].Game.GameState.Players.FirstOrDefault(p => p.Id == playerId).Dices = Rerolldices;
-
-            OnGameStateUpdated?.Invoke();
-            Console.WriteLine("Client_DiceRolled_success");
-            // winners получают какой то отличительный знак
-            return Task.CompletedTask;
+			// реализация в room.razor
+			return Task.CompletedTask;
 		}
 
 		// состояние игры изменилось, ход переходить следующему -> с сервера
@@ -159,7 +162,7 @@ namespace SignalRGame.Client
 			if (Rooms[roomId] is not null)
 			{
 				Rooms[roomId].Game.GameState = gameState;
-                OnGameStateUpdated?.Invoke();
+                OnGameStateUpdated?.Invoke(roomId);
 				Console.WriteLine($"Client_RecieveGameState: CurrPlayerId: {Rooms[roomId].Game.GameState.CurrentPlayerId}");
 				Console.WriteLine("Client_RecieveGameState_success");
 				//Console.WriteLine($"Game state changed");
@@ -168,27 +171,44 @@ namespace SignalRGame.Client
 		}
 
 		// когда мини игра окончена: распределить награду между победителями, начать новую игру -> с сервера
-		public Task RecieveWinners(string roomId, GameState gameState)
-		{
-			// всем игрокам выводится сообщение о проигрыше/победе, распределяется награда
-			/*if (Rooms.TryGetValue(roomId, out GameRoom room))
-			{
-				room.Game.GameState = gameState;
-				OnGameStateUpdated?.Invoke();
-				Console.WriteLine($"Game state changed");
-			}*/
-			return Task.CompletedTask;
-		}
+        public Task MiniGameEnded(string roomId, int reward)
+        {
+            // реализация в room.razor
+            return Task.CompletedTask;
+        }
 
-		// конец игры (все монеты у одного игрока) -> с сервера
-		public Task GameEnded(string roomId, Player winner)
+		// продолжить игру -> на сервер
+        public async Task ContinueGame(string roomId)
+        {
+            Console.WriteLine("Client_ContinueGame");
+            await _hubConnection.SendAsync(nameof(ContinueGame), roomId);
+            Console.WriteLine("Client_ContinueGame_success");
+        }
+
+		// игра продолжена -> с сервера 
+        public Task GameContinued(string roomId, GameState gameState)
+        {
+            Console.WriteLine("Client_GameContinued");
+            var room = Rooms[roomId];
+            if (room is not null)
+            {
+                room.Game.GameState = gameState;
+                OnGameStateUpdated?.Invoke(roomId);
+                Console.WriteLine($"Client_GameContinued: CurrPlayerId: {room.Game.GameState.CurrentPlayerId}");
+                Console.WriteLine("Client_GameContinued_success");
+            }
+            return Task.CompletedTask;
+        }
+
+        // конец игры (все монеты у одного игрока) -> с сервера
+        public Task GameEnded(string roomId, Player winner)
 		{
 			// вывод победителю поздравление
 			var room = Rooms[roomId];
 			if (room is not null)
 			{
 				room.Game.GameState.IsGameOver = true;
-				OnGameStateUpdated?.Invoke();
+				OnGameStateUpdated?.Invoke(roomId);
 			}
 			return Task.CompletedTask;
 		}
@@ -210,28 +230,5 @@ namespace SignalRGame.Client
 			Console.WriteLine($"Error occured: {errorMessage}");
 			return Task.CompletedTask;
 		}
-
-		/*public async Task FreezeDice(string playerId, List<int> diceIndecies)
-        {
-            await _hubConnection.SendAsync(nameof(FreezeDice), playerId, diceIndecies);
-        }*/
-
-		/*public Task DiceFreezed(string playerId, List<int> indeciesToKeep)
-		{
-			Console.WriteLine($"Frezzed indecies to : '{playerId}'");
-			foreach (var value in indeciesToKeep)
-				Console.WriteLine(value);
-			return Task.CompletedTask;
-		}*/
-
-		/*public Task TurnEnded(string playerId, List<int> diceToReroll)
-		{
-			throw new NotImplementedException();
-		}*/
-
-		/*public Task NotifyNextTurn(string playerId)
-		{
-			throw new NotImplementedException();
-		}*/
 	}
 }

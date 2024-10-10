@@ -12,7 +12,7 @@
             @foreach (var room in GameClient.Rooms.Values)
             {
                 <div class="room-item" @onclick="() => JoinRoom(room.Id)">
-                    <strong>@room.Name</strong> - Players: @room.Game.GameState.Players.Count()/6
+                    <strong>@room.Name</strong> - Players: @room.Game.GameState.Players.Count()/2
                 </div>
             }
         }
@@ -45,12 +45,6 @@
 	public decimal CurrentBet = 100;
 	public decimal TotalPot = 150;
 
-	private List<Player> Players { get; set; } = new()
-	{
-		new Player {Name = "mama"},
-		new Player {Name = "papa"}
-	};
-
 	[Inject]
 	public NavigationManager NavigationManager { get; set; }
 
@@ -62,13 +56,11 @@
 	protected override async Task OnInitializedAsync()
 	{
 		GameClient.OnRoomsUpdated += StateHasChanged;
-		GameClient.OnGameStateUpdated += StateHasChanged;
 	}
 
 	public void Dispose()
 	{
 		GameClient.OnRoomsUpdated -= StateHasChanged;
-		GameClient.OnGameStateUpdated -= StateHasChanged;
 	}
 
 	private async Task CreateRoom()
@@ -88,8 +80,11 @@
 		if (GameClient is not null)
 		{
 			var joinedRoom = await GameClient.JoinRoom(roomId, createRoomModel.PlayerName);
-			StateHasChanged();
-			NavigationManager.NavigateTo($"/room/{roomId}");
+			if (joinedRoom is not null)
+			{
+				StateHasChanged();
+				NavigationManager.NavigateTo($"/room/{roomId}");
+			}
 		}
 	}
 }

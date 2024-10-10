@@ -1,0 +1,18 @@
+﻿<div class="winner-info">
+    <p class="title">Round winner:</p>
+    @foreach (var winner in Winners)
+    {
+        <p class="winner-name">@winner.Name</p>
+    }
+    @if (Reward >= 0)
+    {
+        <p class="reward">Reward: @Reward</p>
+    }
+</div>
+
+@code {
+	[Parameter]
+	public List<Player> Winners { get; set; }
+	[Parameter]
+	public int Reward { get; set; }
+}

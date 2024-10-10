@@ -1,6 +1,7 @@
 ﻿<div class="betting-panel">  
     <div class="bet-info">
         <p>Current Bet: @CurrentBet</p>
+        <p>Game Current Bet: @GameCurrentBet</p>
         <p>Total Pot: @TotalPot</p>
     </div>
     <div class="bet-actions">
@@ -12,22 +13,30 @@
 
 @code {
     [Parameter]
-    public decimal CurrentBet { get; set; }
+    public int CurrentBet { get; set; }
     [Parameter]
-    public decimal TotalPot { get; set; }
+    public int GameCurrentBet { get; set; }
+    [Parameter]
+    public int TotalPot { get; set; }
+    [Parameter]
+    public Action<int> NewBet { get; set; }
+    [Parameter]
+    public Action PassGame { get; set; }
 
     private void Check()
     {
-
+        CurrentBet = GameCurrentBet;
+        NewBet.Invoke(CurrentBet);
     }
 
     private void Pass()
     {
-
+        PassGame.Invoke();
     }
 
     private void Raise()
     {
-        
+        CurrentBet += 10;
+        NewBet.Invoke(CurrentBet);
     }
 }

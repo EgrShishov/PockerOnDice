@@ -1,4 +1,6 @@
 ﻿
+using System.ComponentModel;
+
 namespace SignalRGame.Domain.Models;
 
 public class Player
@@ -7,11 +9,14 @@ public class Player
     public string ConnectionId { get; set; } = string.Empty;
     public string Name { get; set; }
     public List<DiceClass> Dices { get; set; } = new() {new DiceClass(0), new DiceClass(1), new DiceClass(2), new DiceClass(3), new DiceClass(4)}; // инвентарь каждого игрока 5 костей
+    
     // Combination(ранг комбинации, score комбинации этого ранга)
     // результат конкретного игрока в текущем раунде. Сбрасывается каждую новую игру.
 	public Combination Combo { get; set; } = new();
-	public decimal CurrentBet { get; set; } = 0;
     public int Balance { get; set; } = 0;
+    public int CurrentBet { get; set; } = 0;
+
+    private Random rnd = new Random();
 
     public void RollDice(List<DiceClass>? dicesToReroll) // бросаем кости
     {
@@ -19,21 +24,34 @@ public class Player
         if (dicesToReroll is null)
         {
             Console.WriteLine("Server_Player_RollDice - NULL");
-            Dices = new() { new DiceClass(0), new DiceClass(1), new DiceClass(2), new DiceClass(3), new DiceClass(4) };
+            dicesToReroll = new() { new DiceClass(0), new DiceClass(1), new DiceClass(2), new DiceClass(3), new DiceClass(4) };
         }
 
-        Random rnd = new Random();
-
+        Dices = dicesToReroll;
         foreach (var dice in Dices)
         {
             if (dice.IsReroll)
             {
-                dice.Value = rnd.Next(1, 7);
+                Console.WriteLine($"dice{dice.Id} - diceValue: {dice.Value}");
+                dice.Value = rnd.Next(1, 320785) % 6 + 1;
                 Console.WriteLine(dice.Value);
                 dice.IsReroll = false;
+                dice.IsRolling = false;
             }
         }
         Console.WriteLine("Server_Player_RollDice_success");
+    }
+
+    public void Pass()
+    {
+        Combo = new Combination(-1, -1);
+    }
+
+    public void ResetDice()
+    {
+        CurrentBet = 0;
+        Dices = new() { new DiceClass(0), new DiceClass(1), new DiceClass(2), new DiceClass(3), new DiceClass(4) };
+        Combo = new();
     }
 
 	public List<int> GetValuesDice()

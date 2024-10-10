@@ -10,24 +10,19 @@ namespace SignalRGame.Domain.Models
 
 		public Combination()
 		{
-			CombinationLevel = -1;
-			Score = -1;
+			CombinationLevel = 0;
+			Score = 0;
 		}
 
-		public Combination(int combo_level, int score = -1)
+		public Combination(int combo_level, int score = 0)
 		{
 			CombinationLevel = combo_level;
 			Score = score;
 		}
 		public void Reset()
 		{
-			CombinationLevel = -1;
-			Score = -1;
-		}
-
-		public int CalculateScore()
-		{
-			return CombinationLevel * 10000 + Score; //betta
+			CombinationLevel = 0;
+			Score = 0;
 		}
 
 		public override bool Equals(object? obj)

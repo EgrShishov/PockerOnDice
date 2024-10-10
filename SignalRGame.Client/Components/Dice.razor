@@ -14,9 +14,9 @@
 
     private string GetAnimationClass() => IsRolling ? "rolling" : "";
 
-    private string GetFrozenClass() => !DiceValue.IsReroll ? "frozen" : "";
+    private string GetFrozenClass() => DiceValue.IsReroll ? "" : "frozen";
 
-    private void ToggleFrosen()
+    private void ToggleFreeze()
     {
         OnToggleFreeze.Invoke(DiceValue);
     }

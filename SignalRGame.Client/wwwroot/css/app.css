@@ -342,13 +342,13 @@ body, html {
 .player-list {
     background-image: url('/sources/list.png');
     background-size: cover;
-    background-position: center;
+    background-position: top;
     display: flex;
     flex-direction: column;
     align-items: center;
     border-radius: 10px;
     width: 200px;
-    height: auto;
+    height: 400px;
     position: absolute;
     z-index: 100;
 }
@@ -382,7 +382,10 @@ body, html {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin: 20px;
+    gap: 20px;
+    flex-wrap: wrap; 
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 .betting-panel {
@@ -396,6 +399,7 @@ body, html {
 
 .bet-info {
     margin-bottom: 10px;
+    color: #fff;
 }
 
 .bet-actions button {
@@ -406,3 +410,60 @@ body, html {
     opacity: 0.7; 
     border: 2px solid blue;
 }
+
+.winner-info {
+    background-color: #f9f9f9; /* Светлый фон */
+    border: 2px solid #4CAF50; /* Зелёная рамка */
+    border-radius: 10px; /* Скругленные углы */
+    padding: 20px; /* Внутренний отступ */
+    max-width: 300px; /* Максимальная ширина блока */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Тень */
+    font-family: 'Arial', sans-serif; /* Шрифт */
+    margin: 20px auto; /* Центрирование */
+}
+
+.title {
+    font-size: 20px; /* Размер текста */
+    font-weight: bold; /* Жирный шрифт */
+    color: #333; /* Тёмный цвет текста */
+    margin-bottom: 10px; /* Отступ снизу */
+    text-align: center; /* Центрирование заголовка */
+}
+
+.winner-name {
+    font-size: 18px;
+    color: #555; /* Более тёмный оттенок серого */
+    padding: 5px 0; /* Отступы */
+    text-align: center; /* Центрирование имён победителей */
+}
+
+.reward {
+    font-size: 18px;
+    color: #FF5722; /* Яркий оранжевый для выделения награды */
+    font-weight: bold;
+    margin-top: 15px; /* Отступ сверху */
+    text-align: center;
+}
+
+
+.balance-button {
+    background: linear-gradient(45deg, #4CAF50, #8BC34A); /* Градиент зелёного цвета */
+    border: none; /* Убираем стандартную рамку */
+    color: white; /* Белый цвет текста */
+    padding: 10px 20px; /* Внутренние отступы */
+    text-align: center; /* Центрирование текста */
+    text-decoration: none; /* Убираем подчёркивание */
+    display: inline-block; /* Для корректного отображения кнопки */
+    font-size: 16px; /* Размер текста */
+    font-weight: bold; /* Жирный шрифт */
+    border-radius: 25px; /* Закругленные углы */
+    transition: background 0.3s, box-shadow 0.3s; /* Анимация для плавного изменения фона и тени */
+    cursor: pointer; /* Изменение курсора на указатель */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Тень для объёмности */
+    margin-top: 10px; /* Отступ сверху */
+}
+
+    .balance-button:hover {
+        background: linear-gradient(45deg, #66BB6A, #9CCC65); /* Изменение градиента при наведении */
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2); /* Увеличение тени при наведении */
+    }

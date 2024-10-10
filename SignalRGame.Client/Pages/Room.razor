@@ -4,22 +4,40 @@
 <PageTitle>Room @RoomId</PageTitle>
 
 <div class="game-room">
-	<PlayersList Players="@CurrentRoom.Game.GameState.Players" />
-	<GameField />
-	<Betting CurrentBet="@CurrentBet" TotalPot="@TotalPot" />
+	<GameField RoomId="@RoomId"/>
+	<WinnerInfo Winners="@Winners" Reward="Reward"/>
 </div>
 
 @code {
 	[Inject]
 	public NavigationManager NavigationManager { get; set; }
 	[Inject]
-	public GameClient GameClient { get; set; }
-
-	public decimal CurrentBet = 100;
-	public decimal TotalPot = 150;
+	public HubConnection HubConnection { get; set; }
 
 	[Parameter]
 	public string RoomId { get; set; }
+
+	private List<Player> Winners { get; set; } = new();
+	private int Reward { get; set; } = -1;
+
+	protected override Task OnInitializedAsync()
+	{
+		HubConnection.On<string, List<Player>>("RecieveWinners", (string roomId, List<Player> winners) =>
+		{
+			Winners = winners;
+			Reward = -1;
+			Console.WriteLine(winners[0].Name);
+			StateHasChanged();
+		});
+		HubConnection.On<string, int>("MiniGameEnded", (string roomId, int reward) =>
+		{
+			Reward = reward;
+			Console.WriteLine($"reward: {reward}");
+			StateHasChanged();
+		});
+
+		return base.OnInitializedAsync();
+	}
 
 	public void Dispose()
 	{
