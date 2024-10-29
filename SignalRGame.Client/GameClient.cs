@@ -97,7 +97,7 @@ namespace SignalRGame.Client
 			{
 				var player_ = room.Game.GameState.Players.FirstOrDefault(p => p.Id == player.Id);
 				room.Game.GameState.Players.Remove(player_);
-				Console.WriteLine("MAMAMAMAMA");
+				room.Game.GameState.IsGameStarted = false;
 			}
 			OnRoomsUpdated?.Invoke();
 			OnGameStateUpdated?.Invoke(roomId);
